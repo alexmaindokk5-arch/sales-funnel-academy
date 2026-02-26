@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales Funnel Academy — Complete Training System</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Sales%20Funnel%20Academy%22%2C%22short_name%22%3A%22SFA%22%2C%22start_url%22%3A%22%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23080810%22%2C%22theme_color%22%3A%22%23E94560%22%7D">
+<meta name="theme-color" content="#E94560">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#080810;--bg2:#0e0e1a;--bg3:#141425;--bg4:#1a1a30;
+  --accent:#E94560;--accent2:#d63050;--accent3:#ff6b81;
+  --green:#4caf50;--green2:#1a3020;--red:#f44336;--red2:#301a1a;
+  --orange:#ff9800;--orange2:#2a2510;--blue:#5c9aff;--blue2:#111830;
+  --text:#e8e8e8;--text2:#aaa;--text3:#666;--text4:#444;
+  --border:#1e1e36;--border2:#2a2a4a;
+  --radius:12px;--radius2:9px;--radius3:6px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
+.container{max-width:800px;margin:0 auto;padding:16px}
+a{color:var(--accent);text-decoration:none}
+
+/* ─── FIX #1: Offline/Error Banner ─── */
+.conn-banner{position:fixed;top:0;left:0;right:0;background:var(--red);color:#fff;padding:12px 16px;text-align:center;font-size:.85rem;font-weight:600;z-index:9999;display:none}
+.conn-banner.show{display:block}
+.conn-banner button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;padding:4px 12px;border-radius:4px;margin-left:10px;font-size:.8rem}
+.conn-banner button:hover{background:rgba(255,255,255,.3)}
+
+/* ─── FIX #4: Loading Overlay ─── */
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(8,8,16,.85);display:none;justify-content:center;align-items:center;z-index:9998;flex-direction:column;gap:12px}
+.loading-overlay.show{display:flex}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--text2);font-size:.85rem}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ─── Topbar ─── */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.logo{font-weight:800;font-size:1.1rem;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.top-right{display:flex;align-items:center;gap:8px}
+.top-info{color:var(--text3);font-size:.82rem}
+.top-btn{color:var(--text3);font-size:.78rem;padding:5px 10px;border:1px solid var(--border2);border-radius:var(--radius3);background:none;transition:all .2s;min-height:36px;min-width:60px}
+.top-btn:hover{color:var(--accent);border-color:var(--accent)}
+
+/* ─── Views ─── */
+.view{display:none}.view.active{display:block}
+
+/* ─── Login ─── */
+.login-wrap{text-align:center;padding:60px 20px}
+.login-wrap h1{font-size:2rem;background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px}
+.login-wrap .sub{color:var(--text3);margin-bottom:30px;font-size:.9rem}
+.login-input{background:var(--bg2);border:2px solid var(--border2);color:#fff;padding:13px 18px;font-size:1rem;border-radius:10px;width:100%;max-width:320px;text-align:center;display:block;margin:0 auto 10px;min-height:48px}
+.login-input:focus{outline:none;border-color:var(--accent)}
+.login-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;padding:14px 50px;font-size:1rem;font-weight:700;border-radius:10px;transition:all .2s;min-height:48px;min-width:120px}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 4px 15px rgba(233,69,96,.3)}
+.login-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.login-error{color:var(--red);font-size:.85rem;margin-top:10px;min-height:20px}
+
+/* ─── Dashboard ─── */
+.dash-welcome{margin-bottom:4px}
+.dash-welcome h2{font-size:1.2rem;font-weight:700}
+.dash-welcome .streak-row{display:flex;align-items:center;gap:12px;color:var(--text3);font-size:.82rem;margin-top:4px}
+.streak-badge{background:var(--orange2);color:var(--orange);padding:2px 8px;border-radius:12px;font-size:.72rem;font-weight:700}
+.xp-bar{width:100%;height:6px;background:var(--bg2);border-radius:3px;margin:12px 0 16px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));border-radius:3px;transition:width .5s}
+.xp-label{display:flex;justify-content:space-between;font-size:.75rem;color:var(--text3);margin-top:-10px;margin-bottom:12px}
+
+/* Nav tabs */
+.nav-tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.nav-tab{padding:10px 18px;background:var(--bg2);border:1px solid var(--border);color:var(--text3);border-radius:20px;font-size:.82rem;font-weight:600;transition:all .2s;position:relative;min-height:40px}
+.nav-tab.active{border-color:var(--accent);color:var(--accent);background:rgba(233,69,96,.08)}
+.nav-tab:hover{color:var(--text)}
+.nav-tab .notif{position:absolute;top:-3px;right:-3px;width:8px;height:8px;background:var(--accent);border-radius:50%;border:2px solid var(--bg)}
+
+/* ─── Cards ─── */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;min-height:100px}
+.card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 15px rgba(233,69,96,.1)}
+.card.locked{opacity:.4;cursor:not-allowed;pointer-events:none}
+.card .phase{color:var(--accent);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.card .title{font-weight:700;font-size:.92rem;margin-bottom:8px;color:#fff}
+.card .meta{font-size:.76rem;color:var(--text3)}
+.card .badge{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:16px;font-size:.7rem;font-weight:700}
+.badge-pass{background:var(--green2);color:var(--green)}
+.badge-fail{background:var(--red2);color:var(--red)}
+.badge-pending{background:var(--orange2);color:var(--orange)}
+.badge-new{background:rgba(92,154,255,.15);color:var(--blue)}
+.card.full{grid-column:1/-1;background:linear-gradient(135deg,var(--bg3),#1a1030);border-color:var(--accent)}
+.att-left{color:var(--orange);font-size:.72rem;margin-top:5px}
+
+/* Difficulty tags */
+.diff{display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:700;margin-right:4px}
+.diff-easy{background:var(--green2);color:var(--green)}
+.diff-med{background:var(--orange2);color:var(--orange)}
+.diff-hard{background:var(--red2);color:var(--red)}
+
+/* ─── Quiz ─── */
+.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.quiz-label{color:var(--accent);font-weight:700;font-size:.95rem}
+.timer{color:var(--orange);font-weight:700;font-size:1rem;font-variant-numeric:tabular-nums}
+.timer.danger{color:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.quiz-counter{color:var(--text3);font-size:.82rem;margin-bottom:5px}
+.pbar{width:100%;height:4px;background:var(--bg3);border-radius:2px;margin-bottom:18px}
+.pbar-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent3));border-radius:2px;transition:width .3s}
+
+.qcard{background:var(--bg2);border-radius:var(--radius);padding:22px;margin-bottom:14px}
+.qnum{color:var(--accent);font-size:.75rem;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.qtxt{font-size:.98rem;color:#fff;line-height:1.5;margin-bottom:16px}
+.opt{display:block;width:100%;text-align:left;background:var(--bg);border:2px solid var(--border);color:#bbb;padding:14px 16px;margin-bottom:8px;border-radius:var(--radius2);font-size:.88rem;transition:all .15s;line-height:1.35;min-height:48px}
+.opt:hover:not(.locked){border-color:var(--text4);color:#fff}
+.opt.sel{border-color:var(--blue);background:var(--blue2);color:#fff}
+.opt.correct{border-color:var(--green);background:var(--green2);color:var(--green)}
+.opt.wrong{border-color:var(--red);background:var(--red2);color:var(--red)}
+.opt.locked{cursor:default}.opt.locked.dim{opacity:.3}
+.expl{background:var(--bg);border-left:3px solid var(--accent);padding:10px 14px;margin-top:12px;border-radius:0 8px 8px 0;display:none;font-size:.84rem;color:var(--text2);line-height:1.4}
+.expl.show{display:block}.expl b{color:var(--green)}
+.nav-row{display:flex;gap:8px;margin-top:14px}
+.btn{flex:1;padding:14px;border-radius:var(--radius2);border:none;font-size:.9rem;font-weight:600;transition:all .2s;min-height:48px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{box-shadow:0 4px 12px rgba(233,69,96,.3)}
+.btn-primary:disabled{background:var(--bg3);color:var(--text4);cursor:default;box-shadow:none}
+.btn-secondary{background:var(--bg2);color:var(--text3);border:1px solid var(--border2)}
+.btn-secondary:hover{color:#fff;border-color:var(--text3)}
+
+/* ─── Results ─── */
+.results{text-align:center;padding:24px 0}
+.score-ring{width:150px;height:150px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 18px;position:relative}
+.score-ring canvas{position:absolute;top:0;left:0}
+.score-num{font-size:2.4rem;font-weight:800;z-index:1}
+.score-lbl{font-size:.78rem;color:var(--text3);z-index:1}
+.result-msg{font-size:1.1rem;font-weight:700;margin-bottom:4px}
+.result-msg.pass{color:var(--green)}.result-msg.fail{color:var(--red)}
+.result-sub{color:var(--text3);margin-bottom:16px;font-size:.85rem}
+.detail-box{background:var(--bg2);border-radius:var(--radius);padding:16px;text-align:left;margin:12px 0}
+.detail-box h3{color:var(--accent);font-size:.85rem;margin-bottom:8px}
+.detail-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bg3);font-size:.82rem}
+.detail-row:last-child{border:none}
+.detail-row .dl{color:var(--text3)}.detail-row .dv{font-weight:700}
+.dv-g{color:var(--green)}.dv-b{color:var(--red)}
+
+.vcode{background:var(--bg2);border:2px dashed var(--accent);border-radius:var(--radius);padding:14px;margin:16px 0;word-break:break-all}
+.vcode p{color:var(--accent);font-weight:700;font-size:.85rem;margin-bottom:6px}
+.vcode code{display:block;background:var(--bg);padding:8px;border-radius:var(--radius3);font-size:.74rem;color:var(--text2);user-select:all;cursor:pointer}
+.vcode small{color:var(--text4);font-size:.72rem;display:block;margin-top:6px}
+
+/* ─── Study Mode ─── */
+.study-card{background:var(--bg2);border-radius:var(--radius);padding:22px;margin-bottom:14px;cursor:pointer;border:2px solid var(--border);transition:border-color .2s;min-height:120px}
+.study-card:hover{border-color:var(--border2)}
+.study-q{font-size:.95rem;color:#fff;line-height:1.45;margin-bottom:10px}
+.study-a{display:none;border-top:1px solid var(--border2);padding-top:10px;font-size:.88rem;color:var(--green);line-height:1.4}
+.study-a.show{display:block}
+.study-hint{color:var(--text4);font-size:.78rem;text-align:center;margin-bottom:14px}
+
+/* ─── Roadmap ─── */
+.road-day{background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;transition:all .2s}
+.road-day.current{border-color:var(--accent);box-shadow:0 0 20px rgba(233,69,96,.1)}
+.road-day.done{border-color:var(--green);opacity:.85}
+.road-day.locked{opacity:.5}
+.road-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.road-title{font-weight:700;font-size:.95rem}
+.road-tag{padding:3px 10px;border-radius:12px;font-size:.7rem;font-weight:700}
+.road-tag.today{background:rgba(233,69,96,.15);color:var(--accent)}
+.road-tag.done{background:var(--green2);color:var(--green)}
+.road-tag.locked{background:var(--bg3);color:var(--text4)}
+.road-desc{color:var(--text2);font-size:.85rem;line-height:1.4;margin-bottom:10px}
+.road-tasks{list-style:none;padding:0}
+.road-tasks li{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:.84rem;color:var(--text2);border-bottom:1px solid var(--bg3);min-height:44px}
+.road-tasks li:last-child{border:none}
+.road-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.7rem;cursor:pointer;transition:all .2s;flex-shrink:0}
+.road-check.checked{background:var(--green);border-color:var(--green);color:#fff}
+.road-check:hover{border-color:var(--accent)}
+
+/* ─── Chat Simulator ─── */
+.sim-wrap{max-width:500px;margin:0 auto}
+.sim-header{background:var(--bg2);border-radius:var(--radius) var(--radius) 0 0;padding:14px 16px;border:1px solid var(--border);border-bottom:none;display:flex;align-items:center;gap:10px}
+.sim-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#fff}
+.sim-name{font-weight:700;font-size:.9rem}
+.sim-status{color:var(--green);font-size:.72rem}
+.sim-chat{background:var(--bg2);border:1px solid var(--border);border-top:none;padding:16px;min-height:300px;max-height:400px;overflow-y:auto}
+.sim-msg{margin-bottom:10px;display:flex;flex-direction:column}
+.sim-msg.fan{align-items:flex-start}.sim-msg.chatter{align-items:flex-end}
+.sim-bubble{max-width:80%;padding:10px 14px;border-radius:16px;font-size:.88rem;line-height:1.4}
+.sim-msg.fan .sim-bubble{background:var(--bg3);color:var(--text);border-bottom-left-radius:4px}
+.sim-msg.chatter .sim-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.sim-time{font-size:.65rem;color:var(--text4);margin-top:2px;padding:0 4px}
+.sim-choices{background:var(--bg2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:12px}
+.sim-choice{display:block;width:100%;text-align:left;background:var(--bg);border:2px solid var(--border);color:var(--text2);padding:12px 14px;margin-bottom:8px;border-radius:var(--radius2);font-size:.85rem;transition:all .15s;min-height:48px}
+.sim-choice:hover{border-color:var(--accent);color:#fff}
+.sim-choice.correct{border-color:var(--green);background:var(--green2);color:var(--green)}
+.sim-choice.wrong{border-color:var(--red);background:var(--red2);color:var(--red)}
+.sim-feedback{background:var(--bg);border-left:3px solid var(--accent);padding:10px 14px;margin-top:8px;border-radius:0 8px 8px 0;font-size:.84rem;color:var(--text2);line-height:1.4}
+
+/* ─── Achievements ─── */
+.ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ach{background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;transition:all .2s;min-height:100px}
+.ach.unlocked{border-color:var(--orange)}
+.ach.locked{opacity:.35}
+.ach-icon{font-size:2rem;margin-bottom:6px}
+.ach-name{font-weight:700;font-size:.82rem;margin-bottom:2px}
+.ach-desc{font-size:.72rem;color:var(--text3)}
+
+/* ─── Analytics ─── */
+.analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.stat-card{background:var(--bg2);border-radius:var(--radius2);padding:14px;text-align:center;min-height:70px}
+.stat-val{font-size:1.6rem;font-weight:800;color:var(--accent)}
+.stat-lbl{font-size:.7rem;color:var(--text3);margin-top:3px}
+.chart-box{background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.chart-box h3{color:var(--accent);font-size:.85rem;margin-bottom:10px}
+
+/* ─── Reference Cards ─── */
+.ref-card{background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.ref-header{padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background .2s;min-height:52px}
+.ref-header:hover{background:var(--bg3)}
+.ref-title{font-weight:700;font-size:.92rem;display:flex;align-items:center;gap:8px}
+.ref-toggle{color:var(--text3);font-size:.85rem;transition:transform .2s}
+.ref-body{display:none;padding:0 16px 16px;font-size:.85rem;color:var(--text2);line-height:1.5}
+.ref-body.open{display:block}
+.ref-tip{background:var(--bg);border-left:3px solid var(--accent);padding:8px 12px;margin:8px 0;border-radius:0 6px 6px 0;font-size:.82rem}
+.ref-example{background:var(--bg);padding:10px 14px;border-radius:var(--radius3);margin:8px 0;font-size:.82rem;color:var(--text)}
+
+/* ─── Admin ─── */
+.admin-login{text-align:center;padding:50px 20px}
+.admin-login h2{color:var(--accent);margin-bottom:18px}
+.a-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.a-tab{padding:9px 16px;background:var(--bg2);border:1px solid var(--border2);color:var(--text3);border-radius:7px;font-size:.82rem;cursor:pointer;min-height:40px}
+.a-tab.active{border-color:var(--accent);color:var(--accent)}
+.a-tab:hover{color:#fff}
+.a-table{width:100%;border-collapse:collapse;font-size:.8rem;margin-bottom:16px}
+.a-table th{background:var(--bg3);color:var(--accent);padding:8px 6px;text-align:left;font-weight:700;border-bottom:2px solid var(--border2);font-size:.74rem;text-transform:uppercase;letter-spacing:.3px}
+.a-table td{padding:7px 6px;border-bottom:1px solid var(--bg3);color:#bbb}
+.a-table tr:hover td{background:var(--bg)}
+.pc{color:var(--green);font-weight:700}.fc{color:var(--red);font-weight:700}.wc{color:var(--orange);font-weight:700}
+.acc-grid{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:12px}
+.acc-grid .lbl{color:var(--text3);font-size:.72rem;text-transform:uppercase;font-weight:700}
+.acc-input{background:var(--bg);border:1px solid var(--border2);color:#fff;padding:9px 12px;border-radius:var(--radius3);font-size:.82rem;width:100%;min-height:40px}
+.acc-input:focus{outline:none;border-color:var(--accent)}
+.add-btn{background:var(--accent);color:#fff;border:none;padding:9px 16px;border-radius:var(--radius3);font-size:.82rem;font-weight:600;white-space:nowrap;min-height:40px}
+.add-btn:hover{background:var(--accent2)}
+.del-btn{background:none;color:var(--red);border:1px solid var(--red);padding:5px 10px;border-radius:5px;font-size:.72rem;min-height:32px}
+.del-btn:hover{background:var(--red);color:#fff}
+.rst-btn{background:none;color:var(--orange);border:1px solid var(--orange);padding:5px 10px;border-radius:5px;font-size:.72rem;min-height:32px}
+.rst-btn:hover{background:var(--orange);color:#fff}
+.reset-all{background:var(--red2);color:var(--red);border:1px solid var(--red);padding:9px 16px;border-radius:7px;font-size:.78rem;margin-top:14px;min-height:40px}
+.reset-all:hover{background:var(--red);color:#fff}
+.verify-box{background:var(--bg2);border-radius:var(--radius);padding:16px;margin:12px 0}
+.verify-box textarea{width:100%;background:var(--bg);border:1px solid var(--border2);color:#fff;padding:10px;border-radius:7px;font-size:.82rem;resize:vertical;min-height:60px;font-family:monospace}
+.verify-box textarea:focus{outline:none;border-color:var(--accent)}
+.verify-btn{background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:7px;font-size:.82rem;font-weight:600;margin-top:8px;min-height:40px}
+.verify-result{margin-top:12px;padding:12px;border-radius:var(--radius2);font-size:.82rem;display:none}
+.verify-result.valid{background:var(--green2);border:1px solid var(--green);color:var(--green);display:block}
+.verify-result.invalid{background:var(--red2);border:1px solid var(--red);color:var(--red);display:block}
+.empty{text-align:center;padding:30px;color:var(--text4);font-size:.9rem}
+
+/* ─── Modal ─── */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);display:none;justify-content:center;align-items:center;z-index:9997;padding:16px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius);max-width:600px;width:100%;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-header h3{color:var(--accent);font-size:1rem;margin:0}
+.modal-close{background:none;border:none;color:var(--text3);font-size:1.5rem;cursor:pointer;padding:0;line-height:1}
+.modal-close:hover{color:var(--text)}
+.modal-body{padding:20px}
+
+/* ─── Konfetti ─── */
+.confetti-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden}
+.confetti{position:absolute;width:10px;height:10px;opacity:0}
+@keyframes confetti-fall{0%{transform:translateY(-100px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* ─── Dark/Light Mode ─── */
+body.light-mode{--bg:#f5f5f7;--bg2:#fff;--bg3:#e8e8ea;--bg4:#ddd;--text:#1a1a2e;--text2:#444;--text3:#666;--text4:#999;--border:#ddd;--border2:#ccc}
+.theme-toggle{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:.75rem;cursor:pointer;color:var(--text3)}
+.theme-toggle:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ─── Speed Run ─── */
+.speed-badge{background:linear-gradient(135deg,#ff6b35,#f7931e);color:#fff;padding:3px 8px;border-radius:4px;font-size:.7rem;font-weight:700;animation:pulse 1s infinite}
+
+/* ─── Favorites ─── */
+.fav-btn{background:none;border:none;font-size:1.2rem;cursor:pointer;opacity:.5;transition:all .2s}
+.fav-btn:hover,.fav-btn.active{opacity:1}
+.fav-btn.active{color:gold}
+
+/* ─── Export Button ─── */
+.export-btn{background:var(--blue2);color:var(--blue);border:1px solid var(--blue);padding:8px 14px;border-radius:var(--radius3);font-size:.8rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.export-btn:hover{background:var(--blue);color:#fff}
+
+/* ─── Animations ─── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.slide-up{animation:slideUp .4s ease}
+@keyframes confetti{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(400px) rotate(720deg);opacity:0}}
+
+/* ─── FIX #5: Responsive + Touch-friendly ─── */
+@media(max-width:600px){
+  .card-grid{grid-template-columns:1fr}
+  .ach-grid{grid-template-columns:repeat(2,1fr)}
+  .analytics-grid{grid-template-columns:repeat(2,1fr)}
+  .acc-grid{grid-template-columns:1fr}
+  .nav-tabs{gap:4px}.nav-tab{padding:10px 14px;font-size:.78rem}
+  .btn{padding:16px;font-size:.95rem;min-height:52px}
+  .opt{padding:16px;min-height:52px}
+  .login-btn{padding:16px 50px;min-height:52px}
+  .login-input{min-height:52px;font-size:1rem}
+  .road-tasks li{min-height:52px;padding:10px 0}
+  .road-check{width:26px;height:26px;font-size:.8rem}
+  .sim-choice{padding:14px 16px;min-height:52px}
+  .top-btn{min-height:40px;min-width:70px;font-size:.82rem}
+  .a-tab{padding:10px 14px;min-height:44px}
+}
+@media(max-width:400px){
+  .ach-grid{grid-template-columns:1fr 1fr}
+  .analytics-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- FIX #1: Connection Banner -->
+<div class="conn-banner" id="connBanner">
+  ⚠️ Server connection lost. Check your internet.
+  <button onclick="checkConnection()">Retry</button>
+</div>
+
+<!-- FIX #4: Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Loading...</div>
+</div>
+
+<div class="container">
+
+<div class="topbar">
+  <span class="logo">Sales Funnel Academy</span>
+  <div class="top-right">
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+    <button class="theme-toggle" id="soundToggle" onclick="toggleSound()" title="Toggle sounds">🔊</button>
+    <span class="top-info" id="topUser"></span>
+    <button class="top-btn" id="logoutBtn" style="display:none" onclick="doLogout()">Logout</button>
+    <button class="top-btn" onclick="toggleAdmin()">Manager</button>
+  </div>
+</div>
+
+<!-- Views -->
+<div class="view active" id="v-login">
+  <div class="login-wrap">
+    <h1>Sales Funnel Academy</h1>
+    <p class="sub">Complete Chatter Training System</p>
+    <input class="login-input" id="userInput" placeholder="Username" maxlength="40" autocomplete="off">
+    <input class="login-input" id="passInput" type="password" placeholder="Password" maxlength="40">
+    <br><button class="login-btn" id="loginBtn" onclick="doLogin()">Log In</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+<div class="view" id="v-dash"></div>
+<div class="view" id="v-quiz"></div>
+<div class="view" id="v-results"></div>
+<div class="view" id="v-study"></div>
+<div class="view" id="v-roadmap"></div>
+<div class="view" id="v-sim"></div>
+<div class="view" id="v-achieve"></div>
+<div class="view" id="v-analytics"></div>
+<div class="view" id="v-ref"></div>
+<div class="view" id="v-admin-login">
+  <div class="admin-login">
+    <h2>Manager Login</h2>
+    <input class="login-input" id="adminPw" type="password" placeholder="Manager password">
+    <br><button class="login-btn" onclick="adminLogin()">Enter</button>
+    <div class="login-error" id="adminError"></div>
+  </div>
+</div>
+<div class="view" id="v-admin"></div>
+</div>
+<script>
+// ══════════════════ CONFIG ══════════════════
+// FIX #2: Removed adminPw from frontend - now server-only
+const CFG={
+  maxAtt:{quiz:3,cert:3},
+  time:{quiz:420,cert:1200},
+  pass:{quiz:80,cert:85},
+  pick:{quiz:7,cert:20},
+  secret:"sfa2026x",
+  xpPerCorrect:10,
+  xpPerPass:50,
+  xpPerCert:200,
+  xpPerSimComplete:30,
+  xpPerStreak:5,
+  levels:[0,100,250,500,800,1200,1700,2500,3500,5000]
+};
+
+// ══════════════════ QUESTION BANK — 50 Questions ══════════════════
+const BANK={
+"quiz1":{name:"Phase 1: Opening",phase:"Opening",icon:"\u{1F44B}",color:"#E94560",questions:[
+{q:"What is the FIRST thing you should do when a new fan enters?",o:["Send PPV menu","Send a natural, authentic greeting","Wait for them to message","Ask what they want to buy"],a:1,e:"The opening must feel personal. Trust before selling.",d:1},
+{q:"Why NEVER start with 'Hey babe, wanna see something special?'",o:["Too short","Fans have seen it 1000 times — signals 'I want your money'","Some fans prefer formal","No emojis"],a:1,e:"Generic openers destroy trust. Fans recognize copy-paste instantly.",d:1},
+{q:"Fan replies with just 'hey'. What does this mean?",o:["Not interested","Testing if you're real or a bot — stay authentic","Send PPV fast","Rude, ignore"],a:1,e:"Short replies = cautious fan. They're watching if you're real.",d:1},
+{q:"What is the 'Two Paths' concept?",o:["Buy or leave","Conversation naturally goes flirty OR emotional — use either to steer toward PPV","Two PPV options","Two chatter teams"],a:1,e:"Read which direction the convo goes and use that energy toward the sale.",d:2},
+{q:"What is Rule #1?",o:["Close in 5 min","Know your content inside and out before chatting","Never use names","Send 3+ msgs/min"],a:1,e:"Without product knowledge, you can't steer naturally.",d:1},
+{q:"A fan's bio says he likes fitness. How do you open?",o:["'hey handsome'","Reference his interest: 'hey! are you into fitness? I just got back from the gym and I'm dying lol'","'wanna buy my content?'","Send a gym selfie immediately"],a:1,e:"Referencing their interest makes the opener feel personal and researched.",d:2},
+{q:"Fan says 'you're probably just a bot lol'. How do you respond?",o:["Ignore and send PPV","Get offended","Play it cool with personality: 'haha I wish, bots don't get sore from leg day'","Say 'I'm real I promise'"],a:2,e:"Humor + personal detail proves you're real without being defensive.",d:3},
+{q:"Why should you avoid asking 'how are you?' as an opener?",o:["It's too formal","It's generic and every creator sends it — doesn't stand out or feel personal","Fans don't like questions","It's too long"],a:1,e:"'How are you' is the #1 most copy-pasted opener. It signals zero effort.",d:2},
+{q:"A fan subscribed 10 minutes ago but hasn't messaged. What do you do?",o:["Wait for them","Send a personalized opener based on their profile info","Send PPV immediately","Nothing, they'll message when ready"],a:1,e:"New subscribers are warmest in the first few minutes. Strike while interest is high.",d:2},
+{q:"What makes an opener feel 'authentic' vs 'scripted'?",o:["Using emojis","Including specific details only a real person would notice or share","Being short","Using their name"],a:1,e:"Specificity = authenticity. Scripts feel generic because they lack personal details.",d:3},
+]},
+"quiz2":{name:"Phase 2: Build Tension",phase:"Tension",icon:"\u{1F525}",color:"#ff9800",questions:[
+{q:"What does 'steering' mean?",o:["Tell fan you have something to sell","Naturally guide conversation toward a topic connecting to your PPV","Copy-paste scripts","Change subject abruptly"],a:1,e:"Steering is subtle. The fan shouldn't notice.",d:1},
+{q:"Fan talks about their dog. PPV is a shower video. How to steer?",o:["'Forget the dog, see my video'","Ignore dog, send link","Bridge: 'aww cute! just got back from a walk, about to hop in the shower haha'","Wait"],a:2,e:"Bridge connects their topic to yours naturally.",d:2},
+{q:"What is 'topic threading'?",o:["Multiple messages at once","Weaving PPV topic into current conversation seamlessly","New topic every message","Copy fan's words"],a:1,e:"Threading = connecting what fan talks about to your direction.",d:1},
+{q:"How to build curiosity without being obvious?",o:["'Buy my video'","Drop hints making the fan want to ask questions","Send preview","Tell price upfront"],a:1,e:"Hints + incomplete info trigger the brain's gap-filling instinct.",d:1},
+{q:"Fan talks about work stress. What do you do?",o:["Ignore, keep pushing","Empathize then redirect: 'you need something to take your mind off it...'","End conversation","Send PPV to cheer up"],a:1,e:"Acknowledge feelings first, then use their state as a bridge.",d:2},
+{q:"Why is building tension BEFORE the teaser so important?",o:["It wastes time to make more money","Without tension, the teaser feels random and salesy. Tension creates context.","Fans like long conversations","Platform requires it"],a:1,e:"Tension = emotional runway. The teaser lands because the fan is already primed.",d:3},
+{q:"Fan is being flirty: 'you're so hot'. How to escalate?",o:["Send PPV now","Ride the energy: 'you think those are good? I did something way more intense today...'","Say thanks","Change topic"],a:1,e:"Use their energy to build curiosity. They're already on the flirty path — amplify it.",d:2},
+{q:"What is the difference between 'steering' and 'forcing'?",o:["No difference","Steering feels natural, forcing feels like an abrupt subject change that breaks trust","Steering is faster","Forcing works better"],a:1,e:"If the fan notices the redirect, you forced it. Good steering is invisible.",d:3},
+{q:"Fan keeps sending memes. How do you steer to PPV topic?",o:["Tell them to be serious","Play along, then bridge: 'lmao you know what else got me laughing? I tried filming something and it went so wrong haha'","Ignore memes","Wait"],a:1,e:"Match their energy (fun) then bridge from fun to your content story.",d:2},
+{q:"What emotion are you trying to create during Phase 2?",o:["Fear","Curiosity and anticipation — the fan should WANT to know more","Happiness","Urgency"],a:1,e:"Phase 2 builds a curiosity gap. The fan's brain craves the information you're hinting at.",d:2},
+]},
+"quiz3":{name:"Phase 3: Teaser",phase:"Teaser",icon:"\u{1F3AC}",color:"#9c27b0",questions:[
+{q:"What is the purpose of the teaser?",o:["Show PPV for free","Create a vivid mental image so they want it before seeing the price","Discuss pricing","Test if fan has money"],a:1,e:"Teaser plants a picture. Sale is 80% done before price is mentioned.",d:1},
+{q:"How should the teaser FEEL to the fan?",o:["Sales pitch","Like you're sharing something private and exclusive just with them","Product description","Advertisement"],a:1,e:"Must feel intimate and exclusive. Not marketing.",d:1},
+{q:"Best teaser approach?",o:["'I have a PPV for sale'","'omg I recorded something earlier and I can't stop thinking about it...'","'Buy my content'","'Here's the link'"],a:1,e:"Best teaser = confiding in the fan, not selling.",d:1},
+{q:"Why NEVER say 'buy' during teaser?",o:["Rude","'Buy' activates logical brain, triggers price objections instead of desire","Platform rules","Fans don't understand"],a:1,e:"'Buy' switches from emotional to rational thinking.",d:2},
+{q:"Fan says 'that sounds amazing!' after teaser. Next move?",o:["Send PPV immediately","One more exclusivity moment: 'I only share with people I vibe with...'","Ask if they have money","Change subject"],a:1,e:"One more exclusivity layer makes the send feel like a privilege.",d:2},
+{q:"What is the 'mental movie' technique?",o:["Sending a preview clip","Describing content so vividly the fan can picture it without seeing it","Movie recommendation","Recording a trailer"],a:1,e:"Words that paint pictures activate the same brain regions as actually seeing something.",d:3},
+{q:"Fan asks 'what kind of content do you have?' — good time to teaser?",o:["No, too early","YES — they literally asked for it. Perfect natural transition.","Only after 30+ min","Send the full menu"],a:1,e:"When the fan asks, the door is wide open. Most natural teaser moment possible.",d:2},
+{q:"Why should the teaser feel like YOU are excited about the content?",o:["To seem professional","Because enthusiasm is contagious — if you seem thrilled, they catch that excitement","Fans like energy","To fill silence"],a:1,e:"Emotional contagion: your excitement transfers to them.",d:3},
+{q:"You're teasing a bath video. Which teaser is better?",o:["'I have a bath video for $12'","'so I ran a bath with candles and everything and I may have brought my camera... the water wasn't the only thing that was hot'","'bath video available'","'want to see me in the bath?'"],a:1,e:"Vivid details (candles, camera, hot) create the mental movie. Others are product listings.",d:2},
+{q:"What's the biggest teaser mistake?",o:["Being too slow","Revealing too much — fan feels like they already 'got it' and don't need to buy","Using emojis","Being too short"],a:1,e:"The teaser should create a gap between what they know and what they want to see.",d:3},
+]},
+"quiz4":{name:"Phase 4: Converting + FOMO",phase:"FOMO",icon:"\u{1F4B0}",color:"#f44336",questions:[
+{q:"What is the FOMO principle?",o:["Fear Of Making Orders","Creating urgency — fan believes offer is limited or about to disappear","Multiple discounts","Sending PPV many times"],a:1,e:"FOMO = impulse action. Disappearing opportunity beats overthinking.",d:1},
+{q:"Fan says 'I'll think about it'. How fast to follow up?",o:["24 hours","2-3 hours","Within 3-5 minutes with FOMO message","Never"],a:2,e:"3-5 Minute Rule. Hours = cool off. Minutes = impulse stays alive.",d:1},
+{q:"Fan says 'too expensive'. Best response?",o:["Lower price","Reframe: 'thinking of raising price, everyone said it's underpriced...'","'Ok bye'","Send free"],a:1,e:"Never lower instantly. Reframe value + hint price is temporary.",d:2},
+{q:"Fan opened PPV link but didn't buy. What now?",o:["Another link","Wait 3-5 min: 'saw you checked it out... only keeping it available a bit longer'","Ignore","Ask what's wrong"],a:1,e:"Opened = interested. 3-5 min scarcity follow-up pushes to purchase.",d:2},
+{q:"Why does pressure beat patience with hesitant fans?",o:["Fans are unintelligent","Hesitation = they WANT it. Time pressure makes emotional brain override logical","Never be patient","Fans like pressure"],a:1,e:"Hesitant = already interested. Urgency tips scale toward impulse.",d:2},
+{q:"What is 'artificial scarcity'?",o:["Reducing supply","Making fan believe offer will disappear — loss aversion is 2x stronger than desire","Raising prices","Limiting messages"],a:1,e:"Humans fear losing something more than wanting to gain something.",d:3},
+{q:"Fan says 'maybe later'. What's the psychology?",o:["Not interested","They WANT it but logical brain is fighting emotional — they need a push","They're busy","They hate it"],a:1,e:"'Maybe later' = desire + hesitation. The desire is there, tip the balance.",d:3},
+{q:"Fan goes silent 4 minutes after PPV send. Best FOMO message?",o:["'Please buy it'","'just wanted to let you know I might take that down soon...'","'hello?'","Send it again"],a:1,e:"Scarcity framing without desperation.",d:2},
+{q:"Why NEVER lower price on first objection?",o:["Against rules","Instant discounts signal original price was fake, destroys trust, trains fans to negotiate","Unprofessional","Fans don't want discounts"],a:1,e:"If you drop price instantly, fan thinks: 'it was never worth that much'.",d:3},
+{q:"Fan says 'I already spent a lot this month'. Best approach?",o:["'That sucks'","Empathize + reframe: 'I get it... but this is the kind of thing you won't want to miss'","Drop the sale","Offer 50% off"],a:1,e:"Acknowledge concern, then reframe. Content is unique and fleeting.",d:2},
+]},
+"quiz5":{name:"Phase 5: Upsell",phase:"Upsell",icon:"\u{1F680}",color:"#4caf50",questions:[
+{q:"When to start upsell after first PPV purchase?",o:["Next day","Within 5 minutes — peak emotional high","After 1 hour","Only if they ask"],a:1,e:"5-Minute Rule. Post-purchase = peak dopamine + trust.",d:1},
+{q:"Fan bought PPV, sends fire emoji. What FIRST?",o:["'Want another one?'","React genuinely: 'omg right?? I was so nervous sharing that!'","Ignore emoji","Send next link"],a:1,e:"REACT first. Build connection higher. Then bridge to PPV #2.",d:1},
+{q:"What is 'bridging' in the upsell?",o:["Two links at once","Connecting first PPV to second naturally — continuation not new sale","Bridge payment","Copy message"],a:1,e:"Bridging makes PPV #2 feel like same experience, not new transaction.",d:1},
+{q:"Name two bridge types.",o:["Price + discount","Continuation ('sequel') + different angle ('different vibe')","Fast + slow","Morning + evening"],a:1,e:"Continuation, Different Angle, Behind the Scenes, Special Request.",d:2},
+{q:"What should you NEVER do during upsell?",o:["Use emojis","Make it feel transactional — salesy language breaks the intimate feeling","Wait for reaction","Mention first PPV"],a:1,e:"Transactional feeling kills the magic. Stay personal.",d:2},
+{q:"Why is 'behind the scenes' bridge so effective?",o:["Cheaper","Reframes same shoot as NEW content — fan gets exclusive access nobody else has","Faster to film","Fans like backstage"],a:1,e:"BTS content feels raw, exclusive, and intimate.",d:3},
+{q:"Fan says 'thanks, that was great' and seems ready to leave. What do you do?",o:["Let them go","Quick bridge: 'glad you liked it! I actually filmed BTS that's even more raw...'","'Buy another'","Send menu"],a:1,e:"Catch them before they leave with a soft bridge.",d:2},
+{q:"Fan bought 2 PPVs. Is third upsell too aggressive?",o:["Yes, stop","Depends — if fan is still engaged, a third natural bridge is fine. Read their energy.","Always push","Wait tomorrow"],a:1,e:"Follow the fan's energy. Still excited? Door is open. Cooling? Stop.",d:3},
+{q:"What is the 'special request' bridge?",o:["Asking for tips","Offering custom/personalized content based on what they enjoyed","Requesting feedback","Special pricing"],a:1,e:"Custom content = ultimate upsell. Highest value, deepest connection.",d:2},
+{q:"Why does upsell work best within 5 minutes?",o:["Fans are impatient","Dopamine from purchase is still peaking — resistance is lowest","Platform timing","They might forget"],a:1,e:"Post-purchase dopamine = lowered resistance + heightened trust. Window closes fast.",d:3},
+]},
+};
+
+
+// ══════════════════ SERVER API LAYER ══════════════════
+const API = window.location.origin + "/api";
+let _cache = { accounts: {}, userData: {} };
+let serverOnline = true;
+
+// FIX #4: Loading state helpers
+function showLoading(text = "Loading...") {
+  document.getElementById("loadingText").textContent = text;
+  document.getElementById("loadingOverlay").classList.add("show");
+}
+function hideLoading() {
+  document.getElementById("loadingOverlay").classList.remove("show");
+}
+
+// FIX #1: Connection check
+async function checkConnection() {
+  try {
+    const res = await fetch(API + "/health", { method: "GET", timeout: 5000 });
+    if (res.ok) {
+      serverOnline = true;
+      document.getElementById("connBanner").classList.remove("show");
+      return true;
+    }
+  } catch(e) {}
+  serverOnline = false;
+  document.getElementById("connBanner").classList.add("show");
+  return false;
+}
+
+// FIX #3: Better error handling in API
+async function api(path, method = "GET", body = null, loadingText = null) {
+  if (loadingText) showLoading(loadingText);
+  try {
+    const opts = { method, headers: { "Content-Type": "application/json" } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + path, opts);
+    if (!res.ok) { 
+      console.warn("API error:", path, res.status); 
+      if (res.status === 404) return { ok: false, error: "Resource not found." };
+      if (res.status === 500) return { ok: false, error: "Server error. Please try again." };
+      return { ok: false, error: "Request failed (HTTP " + res.status + ")" }; 
+    }
+    serverOnline = true;
+    document.getElementById("connBanner").classList.remove("show");
+    return res.json();
+  } catch(e) { 
+    console.warn("API unreachable:", path, e.message); 
+    serverOnline = false;
+    document.getElementById("connBanner").classList.add("show");
+    return { ok: false, error: "Cannot connect to server. Check your internet connection." }; 
+  } finally {
+    if (loadingText) hideLoading();
+  }
+}
+
+// ══════════════════ DATA STORE (Server-backed) ══════════════════
+function ld() { return _cache; }
+function sv() { /* no-op, server saves automatically */ }
+function initUser(uid) { return { attempts: {}, results: [], xp: 0, streak: 0, lastLogin: null, roadmap: { day: 1, tasks: {} }, achievements: [], simCompleted: [], weakAreas: {} }; }
+
+function getUD(uid) {
+  if (!_cache.userData[uid]) _cache.userData[uid] = initUser(uid);
+  return _cache.userData[uid];
+}
+function setUD(uid, ud) {
+  _cache.userData[uid] = ud;
+  api("/user/" + uid, "POST", { data: ud });
+}
+
+function addXP(uid, amount) {
+  const ud = getUD(uid);
+  ud.xp = (ud.xp || 0) + amount;
+  setUD(uid, ud);
+  return ud.xp;
+}
+function getLevel(xp) { for (let i = CFG.levels.length - 1; i >= 0; i--) if (xp >= CFG.levels[i]) return i + 1; return 1; }
+function getLevelProgress(xp) {
+  const lv = getLevel(xp); const cur = CFG.levels[lv - 1] || 0;
+  const nxt = CFG.levels[lv] || CFG.levels[CFG.levels.length - 1] * 1.5;
+  return { level: lv, current: xp - cur, needed: nxt - cur, pct: Math.min(100, Math.round((xp - cur) / (nxt - cur) * 100)) };
+}
+
+function updateStreak(uid) {
+  const ud = getUD(uid);
+  const today = new Date().toDateString();
+  if (ud.lastLogin === today) return;
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (ud.lastLogin === yesterday) { ud.streak = (ud.streak || 0) + 1; addXP(uid, CFG.xpPerStreak * ud.streak); }
+  else if (ud.lastLogin !== today) { ud.streak = 1; }
+  ud.lastLogin = today;
+  setUD(uid, ud);
+}
+
+function svAtt(uid, qid, score, total, pct, time, passed) {
+  const ud = getUD(uid);
+  if (!ud.attempts) ud.attempts = {};
+  if (!ud.attempts[qid]) ud.attempts[qid] = [];
+  const qname = qid === "cert" ? "Certification Exam" : (BANK[qid] ? BANK[qid].name : qid);
+  const att = { qid, qname, score, total, pct, time, passed, date: new Date().toISOString(), num: ud.attempts[qid].length + 1 };
+  ud.attempts[qid].push(att);
+  if (!ud.results) ud.results = [];
+  ud.results.push({ ...att, uid });
+  ud.xp = (ud.xp || 0) + (score * CFG.xpPerCorrect);
+  if (passed) ud.xp += qid === "cert" ? CFG.xpPerCert : CFG.xpPerPass;
+  setUD(uid, ud);
+  api("/results", "POST", { uid, ...att });
+  return att;
+}
+
+function attCnt(uid, qid) { return getUD(uid).attempts?.[qid]?.length || 0; }
+function best(uid, qid) { const a = getUD(uid).attempts?.[qid]; if (!a || !a.length) return null; return Math.max(...a.map(x => x.pct)); }
+function rstAtt(uid, qid) {
+  const ud = getUD(uid);
+  if (ud?.attempts?.[qid]) { ud.attempts[qid] = []; ud.results = (ud.results || []).filter(r => r.qid !== qid); setUD(uid, ud); }
+}
+async function allRes() {
+  try {
+    const rows = await api("/results");
+    return Array.isArray(rows) ? rows.sort((a, b) => new Date(b.date) - new Date(a.date)) : [];
+  } catch { return []; }
+}
+
+function addAcc(u, p, n) { return api("/accounts", "POST", { username: u, password: p, displayName: n || u }, "Creating account..."); }
+function delAcc(uid) { return api("/accounts/" + uid, "DELETE", null, "Deleting..."); }
+function auth(u, p) { return api("/login", "POST", { username: u, password: p }, "Logging in..."); }
+
+function mkCode(name, qid, pct, date, num) {
+  const sd = date.substring(0, 10);
+  const raw = `${name}|${qid}|${pct}|${num}|${sd}|${CFG.secret}`;
+  let h = 0; for (let i = 0; i < raw.length; i++) h = ((h << 5) - h + raw.charCodeAt(i)) | 0;
+  h = Math.abs(h).toString(36).toUpperCase();
+  return btoa(`${name}|${qid}|${pct}|${num}|${sd}|${h}`);
+}
+function dkCode(c) {
+  try {
+    const r = atob(c.trim()); const [n, q, p, num, d, h] = r.split("|");
+    const raw = `${n}|${q}|${p}|${num}|${d}|${CFG.secret}`;
+    let h2 = 0; for (let i = 0; i < raw.length; i++) h2 = ((h2 << 5) - h2 + raw.charCodeAt(i)) | 0;
+    h2 = Math.abs(h2).toString(36).toUpperCase();
+    return { valid: h2 === h, name: n, pct: +p, num: +num, date: d, qname: q === "cert" ? "Certification Exam" : (BANK[q]?.name || q), passed: +p >= (q === "cert" ? CFG.pass.cert : CFG.pass.quiz) };
+  } catch { return { valid: false }; }
+}
+
+// ══════════════════ STATE ══════════════════
+let user = null, curQuiz = [], curQid = "", curQ = 0, ans = [], qL = [], tmr = null, tLeft = 0, isAdm = false, dashTab = "quiz";
+
+// ══════════════════ NAV ══════════════════
+function showV(id) { document.querySelectorAll(".view").forEach(v => v.classList.remove("active")); const el = document.getElementById(id); el.classList.add("active"); el.classList.add("fade-in"); setTimeout(() => el.classList.remove("fade-in"), 300); }
+function updTop() { document.getElementById("topUser").textContent = user ? user.displayName : ""; document.getElementById("logoutBtn").style.display = user ? "inline-block" : "none"; }
+
+// ══════════════════ LOGIN (Server) ══════════════════
+document.getElementById("passInput").addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+document.getElementById("userInput").addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("passInput").focus(); });
+
+async function doLogin() {
+  const u = document.getElementById("userInput").value.trim();
+  const p = document.getElementById("passInput").value;
+  const err = document.getElementById("loginError");
+  const btn = document.getElementById("loginBtn");
+  
+  // FIX #3: Better validation messages
+  if (!u) { err.textContent = "Please enter your username."; return; }
+  if (!p) { err.textContent = "Please enter your password."; return; }
+  
+  btn.disabled = true;
+  err.textContent = "";
+  
+  const r = await auth(u, p);
+  btn.disabled = false;
+  
+  if (!r.ok) { 
+    err.textContent = r.error || "Login failed. Please check your credentials."; 
+    return; 
+  }
+  
+  user = { uid: r.uid, displayName: r.displayName };
+  _cache.userData[r.uid] = r.userData || initUser(r.uid);
+  _cache.accounts[r.uid] = { displayName: r.displayName };
+  updTop();
+  updateStreak(user.uid);
+  err.textContent = "";
+  showDash();
+}
+
+function doLogout() { user = null; updTop(); document.getElementById("userInput").value = ""; document.getElementById("passInput").value = ""; isAdm = false; showV("v-login"); }
+
+// ══════════════════ DASHBOARD (Linear Path) ══════════════════
+function showDash() {
+  if (!user) { showV("v-login"); return; }
+  showV("v-dash"); const el = document.getElementById("v-dash"); const uid = user.uid;
+  const ud = getUD(uid);
+  const done = Object.keys(BANK).filter(q => (best(uid, q) || 0) >= CFG.pass.quiz).length;
+  const lp = getLevelProgress(ud.xp || 0);
+  const isCert = (best(uid, "cert") || 0) >= CFG.pass.cert;
+  if(!ud.roadmap) ud.roadmap = { day: 1, tasks: {} };
+  const curDay = ud.roadmap.day || 1;
+
+  let h = `<div class="dash-welcome"><h2>Welcome back, ${user.displayName}!</h2>
+  <div class="streak-row"><span>Day ${Math.min(curDay, 7)} of 7</span>`;
+  if (ud.streak > 1) h += `<span class="streak-badge">${ud.streak} day streak</span>`;
+  if (isCert) h += `<span class="streak-badge" style="background:rgba(76,175,80,.15);color:#4caf50">CERTIFIED</span>`;
+  h += `</div></div>`;
+  h += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span style="font-size:.78rem;color:var(--text3)">Level ${lp.level} · ${ud.xp || 0} XP</span><span style="font-size:.72rem;color:var(--text4)">${lp.pct}%</span></div>`;
+  h += `<div class="xp-bar"><div class="xp-fill" style="width:${lp.pct}%"></div></div>`;
+
+  h += `<div style="display:flex;gap:4px;margin:16px 0 8px">`;
+  for (let d = 1; d <= 7; d++) {
+    const isDone = d < curDay;
+    const isCur = d === curDay;
+    const bg = isDone ? 'var(--green)' : isCur ? 'var(--accent)' : 'var(--bg3)';
+    const lbl = isDone ? '✓' : d;
+    h += `<div style="flex:1;text-align:center;padding:8px 0;border-radius:6px;background:${bg};color:${isDone||isCur?'#fff':'var(--text4)'};font-size:.78rem;font-weight:700">${lbl}</div>`;
+  }
+  h += `</div>`;
+  h += `<div style="text-align:center;font-size:.72rem;color:var(--text4);margin-bottom:18px">${done}/5 Phases Passed · ${(ud.achievements||[]).length} Achievements</div>`;
+
+  if (curDay > 7 || isCert) {
+    h += `<div style="text-align:center;padding:40px 20px">`;
+    h += `<div style="font-size:3rem;margin-bottom:12px">🏆</div>`;
+    h += `<h2 style="color:var(--green);margin-bottom:8px">Training Complete!</h2>`;
+    h += `<p style="color:var(--text2);font-size:.9rem;margin-bottom:20px">You've completed the entire 7-day program${isCert ? ' and earned your Certification' : ''}.</p>`;
+    h += `<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">`;
+    h += `<button class="btn btn-secondary" style="flex:none;padding:10px 18px" onclick="dashTab='achievements';showDashExtra()">Achievements</button>`;
+    h += `<button class="btn btn-secondary" style="flex:none;padding:10px 18px" onclick="dashTab='analytics';showDashExtra()">Analytics</button>`;
+    h += `</div></div>`;
+  } else {
+    const rd = ROADMAP[curDay - 1];
+    h += `<div class="road-day current" style="border-color:var(--accent)">`;
+    h += `<div class="road-header"><span class="road-title">${rd.title}</span><span class="road-tag today">YOUR PATH</span></div>`;
+    h += `<div class="road-desc">${rd.desc}</div>`;
+    h += `<ul class="road-tasks">`;
+
+    let nextTaskIdx = -1;
+    rd.tasks.forEach((t, i) => {
+      if (!ud.roadmap.tasks[t.id] && nextTaskIdx === -1) nextTaskIdx = i;
+    });
+
+    rd.tasks.forEach((t, i) => {
+      const checked = !!ud.roadmap.tasks[t.id];
+      const isNext = i === nextTaskIdx;
+      const actionBtn = getTaskAction(t, checked, isNext);
+      h += `<li style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bg3)${isNext ? ';background:rgba(233,69,96,.05);margin:0 -8px;padding-left:8px;padding-right:8px;border-radius:6px' : ''}">`;
+      h += `<span class="road-check ${checked ? 'checked' : ''}" style="flex-shrink:0">${checked ? '✓' : isNext ? '→' : ''}</span>`;
+      h += `<span style="flex:1;${checked ? 'text-decoration:line-through;opacity:.5' : isNext ? 'color:#fff;font-weight:600' : 'color:var(--text3)'}">${t.text}</span>`;
+      if (actionBtn && !checked) h += actionBtn;
+      h += `</li>`;
+    });
+    h += `</ul>`;
+
+    const allDone = rd.tasks.every(t => ud.roadmap.tasks[t.id]);
+    if (allDone && curDay < 7) {
+      h += `<button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="advanceDay(${curDay})">Complete Day ${curDay} → Start Day ${curDay + 1}</button>`;
+    } else if (allDone && curDay === 7) {
+      h += `<button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="advanceDay(7)">Finish Program 🏆</button>`;
+    }
+    h += `</div>`;
+
+    if (curDay > 1) {
+      h += `<div style="margin-top:16px"><div style="font-size:.82rem;color:var(--text4);margin-bottom:8px;cursor:pointer;padding:8px 0" onclick="document.getElementById('prevDays').style.display=document.getElementById('prevDays').style.display==='none'?'block':'none'">▼ Previous Days (${curDay - 1} completed)</div>`;
+      h += `<div id="prevDays" style="display:none">`;
+      for (let d = curDay - 1; d >= 1; d--) {
+        const prd = ROADMAP[d - 1];
+        h += `<div class="road-day done" style="padding:12px 16px"><div class="road-header"><span class="road-title" style="font-size:.85rem">${prd.title}</span><span class="road-tag done">DONE</span></div></div>`;
+      }
+      h += `</div></div>`;
+    }
+  }
+
+  el.innerHTML = h;
+}
+
+function getTaskAction(task, checked, isNext) {
+  if (checked || !isNext) return '';
+  const t = task.text.toLowerCase();
+  if (t.includes('pass quiz: phase 1') || t.includes('pass quiz') && t.includes('opening')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startQuiz('quiz1')">Start</button>`;
+  if (t.includes('pass quiz: phase 2') || t.includes('pass quiz') && t.includes('tension')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startQuiz('quiz2')">Start</button>`;
+  if (t.includes('pass quiz: phase 3') || t.includes('pass quiz') && t.includes('teaser')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startQuiz('quiz3')">Start</button>`;
+  if (t.includes('pass quiz: phase 4') || t.includes('pass quiz') && t.includes('fomo')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startQuiz('quiz4')">Start</button>`;
+  if (t.includes('pass quiz: phase 5') || t.includes('pass quiz') && t.includes('upsell')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startQuiz('quiz5')">Start</button>`;
+  if (t.includes('study mode: phase 1') || (t.includes('study mode') && t.includes('opening'))) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startStudy('quiz1')">Study</button>`;
+  if (t.includes('study mode: phase 2') || (t.includes('study mode') && t.includes('tension'))) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startStudy('quiz2')">Study</button>`;
+  if (t.includes('study mode: phase 3') || (t.includes('study mode') && t.includes('teaser'))) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startStudy('quiz3')">Study</button>`;
+  if (t.includes('study mode: phase 4') || (t.includes('study mode') && t.includes('fomo'))) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startStudy('quiz4')">Study</button>`;
+  if (t.includes('study mode: phase 5') || (t.includes('study mode') && t.includes('upsell'))) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startStudy('quiz5')">Study</button>`;
+  if (t.includes('study mode: complete review') || t.includes('study mode (all') || t.includes('all 50 cards')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startStudy('all')">Study All</button>`;
+  if (t.includes('study mode: weak') || t.includes('weak spots')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startWeakStudy()">Review</button>`;
+  if (t.includes('simulator: scenario 1') || t.includes('simulator') && t.includes('scenario 1')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startSim('sim1')">Practice</button>`;
+  if (t.includes('simulator: scenario 2') || t.includes('simulator') && t.includes('scenario 2')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startSim('sim2')">Practice</button>`;
+  if (t.includes('simulator: scenario 3') || t.includes('simulator') && t.includes('scenario 3')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startSim('sim3')">Practice</button>`;
+  if (t.includes('all chat simulator') || t.includes('complete all')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startSim('sim1')">Start</button>`;
+  if (t.includes('cheat sheet') || t.includes('all cheat sheets') || t.includes('review all cheat')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();showRefView()">Open</button>`;
+  if (t.includes('certification exam') || t.includes('take the cert')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();startCert()">Start Exam</button>`;
+  if (t.includes('re-take any quiz')) return `<button class="btn btn-primary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();showRetakeView()">Check</button>`;
+  return `<button class="btn btn-secondary" style="flex:none;padding:8px 14px;font-size:.8rem;min-height:40px" onclick="event.stopPropagation();manualCheck('${task.id}')">Done ✓</button>`;
+}
+
+function manualCheck(taskId) {
+  const ud = getUD(user.uid);
+  if (!ud.roadmap) ud.roadmap = { day: 1, tasks: {} };
+  ud.roadmap.tasks[taskId] = true;
+  addXP(user.uid, 5);
+  setUD(user.uid, ud);
+  checkAchievements(user.uid);
+  showDash();
+}
+
+function showRefView() {
+  showV("v-ref");
+  let h = `<h3 style="font-size:.95rem;margin-bottom:12px;color:var(--accent)">Quick Reference & Cheat Sheets</h3>`;
+  REFS.forEach((ref, i) => {
+    h += `<div class="ref-card"><div class="ref-header" onclick="toggleRef(${i})"><span class="ref-title">${ref.icon} ${ref.title}</span><span class="ref-toggle" id="refT${i}">▼</span></div><div class="ref-body" id="refB${i}">${ref.content}</div></div>`;
+  });
+  h += `<button class="btn btn-secondary" style="margin-top:14px;padding:12px 30px" onclick="showDash()">← Back to Path</button>`;
+  document.getElementById("v-ref").innerHTML = h;
+}
+
+function showRetakeView() {
+  showV("v-ref");
+  const uid = user.uid;
+  let h = `<h3 style="font-size:.95rem;margin-bottom:12px;color:var(--accent)">Retake Quizzes Below 90%</h3>`;
+  let hasRetake = false;
+  for (const [qid, qd] of Object.entries(BANK)) {
+    const b = best(uid, qid) || 0;
+    if (b < 90 && b > 0) {
+      hasRetake = true;
+      h += `<div class="card" style="margin-bottom:10px" onclick="startQuiz('${qid}')"><div class="phase">${qd.icon} ${qd.phase}</div><div class="title">${qd.name}</div><div class="meta">Current best: <span style="color:var(--orange)">${b}%</span> — Need 90%+</div></div>`;
+    }
+  }
+  if (!hasRetake) h += `<p style="color:var(--green);font-size:.9rem">All quizzes are 90%+ — you're good!</p>`;
+  h += `<button class="btn btn-secondary" style="margin-top:14px;padding:12px 30px" onclick="showDash()">← Back to Path</button>`;
+  document.getElementById("v-ref").innerHTML = h;
+}
+
+function showDashExtra() {
+  if (dashTab === 'achievements') { showV("v-achieve"); document.getElementById("v-achieve").innerHTML = renderAchieveTab(user.uid) + `<button class="btn btn-secondary" style="margin-top:14px;padding:12px 30px" onclick="showDash()">← Back</button>`; }
+  else if (dashTab === 'analytics') { showV("v-analytics"); document.getElementById("v-analytics").innerHTML = renderAnalyticsTab(user.uid) + `<button class="btn btn-secondary" style="margin-top:14px;padding:12px 30px" onclick="showDash()">← Back</button>`; renderCharts(user.uid); }
+}
+
+// ══════════════════ QUIZ ENGINE ══════════════════
+function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
+function mkQuiz(questions, count) {
+  const picked = shuffle([...questions]).slice(0, count);
+  return picked.map(q => { const idx = q.o.map((_, i) => i); const si = shuffle([...idx]); return { q: q.q, o: si.map(i => q.o[i]), a: si.indexOf(q.a), e: q.e, d: q.d, origQ: q.q }; });
+}
+
+function startQuiz(qid) {
+  if (!user) return; const uid = user.uid, at = attCnt(uid, qid), b = best(uid, qid);
+  if (at >= CFG.maxAtt.quiz && !((b || 0) >= CFG.pass.quiz)) return;
+  curQid = qid; curQuiz = mkQuiz(BANK[qid].questions, CFG.pick.quiz);
+  curQ = 0; ans = new Array(curQuiz.length).fill(-1); qL = new Array(curQuiz.length).fill(false);
+  tLeft = CFG.time.quiz; showV("v-quiz"); startTmr(); renderQ();
+}
+function startCert() {
+  if (!user) return; const uid = user.uid;
+  if (attCnt(uid, "cert") >= CFG.maxAtt.cert) return;
+  if (!Object.keys(BANK).every(q => (best(uid, q) || 0) >= CFG.pass.quiz)) return;
+  curQid = "cert"; let all = []; Object.values(BANK).forEach(b => all.push(...b.questions));
+  curQuiz = mkQuiz(all, CFG.pick.cert); curQ = 0;
+  ans = new Array(curQuiz.length).fill(-1); qL = new Array(curQuiz.length).fill(false);
+  tLeft = CFG.time.cert; showV("v-quiz"); startTmr(); renderQ();
+}
+
+function startTmr() {
+  clearInterval(tmr); tmr = setInterval(() => {
+    tLeft--; const el = document.getElementById("qT");
+    if (el) { const m = Math.floor(tLeft / 60), s = tLeft % 60; el.textContent = `${m}:${s.toString().padStart(2, "0")}`; el.className = "timer" + (tLeft <= 30 ? " danger" : ""); }
+    if (tLeft <= 0) { clearInterval(tmr); finishQ(); }
+  }, 1000);
+}
+
+function renderQ() {
+  if (curQ < 0) curQ = 0;
+  if (curQ >= curQuiz.length) { finishQ(); return; }
+  const q = curQuiz[curQ];
+  if (!q) { finishQ(); return; }
+  const t = curQuiz.length, ic = curQid === "cert", nm = ic ? "Certification Exam" : BANK[curQid].name;
+  const dl = ["", "Easy", "Medium", "Hard"], dt = ["", "diff-easy", "diff-med", "diff-hard"];
+  const last = curQ === t - 1;
+  const answered = !!qL[curQ];
+  let h = `<div class="quiz-header"><span class="quiz-label">${nm}</span><span class="timer" id="qT"></span></div>
+  <div class="quiz-counter">${curQ + 1} of ${t}</div><div class="pbar"><div class="pbar-fill" style="width:${((curQ + 1) / t) * 100}%"></div></div>
+  <div class="qcard"><div class="qnum"><span class="diff ${dt[q.d]}">${dl[q.d]}</span> Question ${curQ + 1}</div><div class="qtxt">${q.q}</div>`;
+  q.o.forEach((o, i) => { let c = "opt"; if (answered) { c += " locked"; if (i === q.a) c += " correct"; else if (i === ans[curQ] && i !== q.a) c += " wrong"; else c += " dim"; } else if (ans[curQ] === i) c += " sel"; h += `<button class="${c}" onclick="pick(${i})">${String.fromCharCode(65 + i)}) ${o}</button>`; });
+  h += `<div class="expl ${answered ? 'show' : ''}"><b>${ans[curQ] === q.a ? 'Correct!' : 'Wrong.'}</b> ${q.e}</div></div>`;
+  h += `<div class="nav-row">`;
+  h += `<button class="btn btn-secondary" style="visibility:${curQ === 0 ? 'hidden' : 'visible'}" onclick="goBack()">Back</button>`;
+  if (last && answered) {
+    h += `<button class="btn btn-primary" onclick="finishQ()">Finish</button>`;
+  } else if (answered) {
+    h += `<button class="btn btn-primary" onclick="goNext()">Next</button>`;
+  } else {
+    h += `<button class="btn btn-primary" disabled>Next</button>`;
+  }
+  h += `</div>`;
+  document.getElementById("v-quiz").innerHTML = h;
+  const el = document.getElementById("qT"); if (el) { const m = Math.floor(tLeft / 60), s = tLeft % 60; el.textContent = `${m}:${s.toString().padStart(2, "0")}`; el.className = "timer" + (tLeft <= 30 ? " danger" : ""); }
+}
+
+function goNext() { if (curQ < curQuiz.length - 1) { curQ++; renderQ(); } else { finishQ(); } }
+function goBack() { if (curQ > 0) { curQ--; renderQ(); } }
+
+function pick(i) {
+  if (curQ < 0 || curQ >= curQuiz.length) return;
+  if (qL[curQ]) return;
+  const q = curQuiz[curQ];
+  if (!q) return;
+  ans[curQ] = i; qL[curQ] = true;
+  playSound(i === q.a ? 'correct' : 'wrong');
+  try {
+    if (user && user.uid) {
+      const ud = getUD(user.uid);
+      if (!ud.weakAreas) ud.weakAreas = {};
+      if (i !== q.a) { ud.weakAreas[q.origQ] = (ud.weakAreas[q.origQ] || 0) + 1; setUD(user.uid, ud); }
+      else if (ud.weakAreas[q.origQ]) { ud.weakAreas[q.origQ]--; if (ud.weakAreas[q.origQ] <= 0) delete ud.weakAreas[q.origQ]; setUD(user.uid, ud); }
+    }
+  } catch(e) { console.warn("weakAreas error:", e); }
+  renderQ();
+}
+
+function finishQ() {
+  try {
+    clearInterval(tmr);
+    if (!user) { showV("v-login"); return; }
+    if (!curQuiz || !curQuiz.length) { showDash(); return; }
+    for (let i = 0; i < curQuiz.length; i++) if (!qL[i]) { ans[i] = -1; qL[i] = true; }
+    const t = curQuiz.length, cor = curQuiz.reduce((s, q, i) => s + (ans[i] === q.a ? 1 : 0), 0), pct = Math.round(cor / t * 100);
+    const ic = curQid === "cert", thr = ic ? CFG.pass.cert : CFG.pass.quiz, p = pct >= thr;
+    const qname = ic ? "Certification Exam" : (BANK[curQid] ? BANK[curQid].name : curQid);
+    const tt = ic ? CFG.time.cert : CFG.time.quiz, tu = tt - tLeft;
+    let att;
+    try { att = svAtt(user.uid, curQid, cor, t, pct, tu, p); } catch(e) {
+      console.error("svAtt error:", e);
+      att = { qid: curQid, qname: qname, score: cor, total: t, pct, time: tu, passed: p, date: new Date().toISOString(), num: 1 };
+    }
+    try { checkAchievements(user.uid); } catch(e) { console.error("achievements error:", e); }
+    let code = "";
+    try { code = mkCode(user.displayName, curQid, pct, att.date, att.num); } catch(e) { code = "N/A"; }
+    let h = `<div class="results slide-up"><div class="score-ring" style="border:5px solid ${p ? 'var(--green)' : 'var(--red)'}"><span class="score-num" style="color:${p ? 'var(--green)' : 'var(--red)'}">${pct}%</span><span class="score-lbl">${cor}/${t}</span></div>
+    <div class="result-msg ${p ? 'pass' : 'fail'}">${p ? (ic ? 'CERTIFIED! \u{1F3C6}' : 'PASSED! \u{2705}') : 'Keep Studying \u{1F4AA}'}</div>
+    <div class="result-sub">${ic ? 'Certification' : 'Phase quiz'} requires ${thr}%</div>
+    <div class="detail-box"><h3>Details</h3>
+    <div class="detail-row"><span class="dl">Name</span><span class="dv">${user.displayName}</span></div>
+    <div class="detail-row"><span class="dl">Quiz</span><span class="dv">${att.qname}</span></div>
+    <div class="detail-row"><span class="dl">Score</span><span class="dv ${p ? 'dv-g' : 'dv-b'}">${cor}/${t} (${pct}%)</span></div>
+    <div class="detail-row"><span class="dl">Time</span><span class="dv">${Math.floor(tu / 60)}m ${tu % 60}s</span></div>
+    <div class="detail-row"><span class="dl">XP Earned</span><span class="dv dv-g">+${cor * CFG.xpPerCorrect + (p ? (ic ? CFG.xpPerCert : CFG.xpPerPass) : 0)}</span></div></div>`;
+    h += `<div class="vcode"><p>Verification Code — Send to Manager</p><code onclick="navigator.clipboard.writeText(this.textContent).then(()=>this.style.color='var(--green)')">${code}</code><small>Click to copy</small></div>`;
+    if (!p) h += `<p style="color:var(--text3);font-size:.82rem;margin:10px 0">Tip: Study the flashcards, then try again.</p>`;
+    h += `<button class="btn btn-primary" style="flex:none;padding:14px 30px;margin-top:10px;width:100%" onclick="showDash()">← Back to Your Path</button></div>`;
+    document.getElementById("v-results").innerHTML = h; showV("v-results");
+    if (p) { playSound('success'); fireConfetti(); }
+    if (p && user) { try { autoCheckRoadmap(curQid, 'quiz'); } catch(e) { console.error("roadmap error:", e); } }
+  } catch(err) {
+    console.error("finishQ error:", err);
+    alert("Error finishing quiz: " + err.message);
+  }
+}
+
+function autoCheckRoadmap(qid, type) {
+  const ud = getUD(user.uid);
+  if (!ud.roadmap) return;
+  const curDay = ud.roadmap.day || 1;
+  const rd = ROADMAP[curDay - 1];
+  if (!rd) return;
+  const quizMap = { quiz1: 'phase 1', quiz2: 'phase 2', quiz3: 'phase 3', quiz4: 'phase 4', quiz5: 'phase 5', cert: 'certification' };
+  const key = quizMap[qid] || '';
+  rd.tasks.forEach(t => {
+    const tl = t.text.toLowerCase();
+    if (type === 'quiz' && tl.includes('pass quiz') && tl.includes(key) && !ud.roadmap.tasks[t.id]) {
+      ud.roadmap.tasks[t.id] = true;
+      addXP(user.uid, 5);
+    }
+    if (type === 'quiz' && qid === 'cert' && (tl.includes('certification exam') || tl.includes('score 85')) && !ud.roadmap.tasks[t.id]) {
+      ud.roadmap.tasks[t.id] = true;
+      addXP(user.uid, 5);
+    }
+  });
+  setUD(user.uid, ud);
+}
+
+// ══════════════════ STUDY MODE ══════════════════
+let studyCards = [], studyIdx = 0;
+function startStudy(qid) {
+  if (qid === "all") { studyCards = []; Object.values(BANK).forEach(b => studyCards.push(...b.questions)); }
+  else if (BANK[qid] && BANK[qid].questions) { studyCards = [...BANK[qid].questions]; }
+  else { console.warn("Invalid study qid:", qid); showDash(); return; }
+  if (!studyCards.length) { showDash(); return; }
+  shuffle(studyCards); studyIdx = 0; renderStudyView();
+}
+function finishStudy() {
+  if (user) {
+    const ud = getUD(user.uid);
+    if (ud.roadmap) {
+      const curDay = ud.roadmap.day || 1;
+      const rd = ROADMAP[curDay - 1];
+      if (rd) {
+        rd.tasks.forEach(t => {
+          const tl = t.text.toLowerCase();
+          if (tl.includes('study mode') && !ud.roadmap.tasks[t.id]) {
+            ud.roadmap.tasks[t.id] = true;
+            addXP(user.uid, 5);
+          }
+        });
+        setUD(user.uid, ud);
+      }
+    }
+  }
+  showDash();
+}
+function startWeakStudy() {
+  if (!user) { showV("v-login"); return; }
+  const ud = getUD(user.uid); studyCards = [];
+  for (const [key] of Object.entries(ud.weakAreas || {})) {
+    for (const qd of Object.values(BANK)) { const found = qd.questions.find(q => q.q === key); if (found) studyCards.push(found); }
+  }
+  if (!studyCards.length) { showDash(); return; }
+  shuffle(studyCards); studyIdx = 0; renderStudyView();
+}
+function renderStudyView() {
+  showV("v-study"); const c = studyCards[studyIdx]; const dl = ["", "Easy", "Medium", "Hard"], dt = ["", "diff-easy", "diff-med", "diff-hard"];
+  let h = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><span class="quiz-label">Study Mode</span><span style="color:var(--text3);font-size:.85rem">${studyIdx + 1}/${studyCards.length}</span></div>`;
+  h += `<div class="pbar"><div class="pbar-fill" style="width:${((studyIdx + 1) / studyCards.length) * 100}%"></div></div>`;
+  h += `<div class="study-hint">Tap the card to reveal the answer</div>`;
+  h += `<div class="study-card" onclick="this.querySelector('.study-a').classList.toggle('show')">`;
+  h += `<div style="margin-bottom:6px"><span class="diff ${dt[c.d]}">${dl[c.d]}</span></div>`;
+  h += `<div class="study-q">${c.q}</div>`;
+  h += `<div class="study-a"><strong>Answer:</strong> ${c.o[c.a]}<br><br><em>${c.e}</em></div></div>`;
+  h += `<div class="nav-row"><button class="btn btn-secondary" ${studyIdx === 0 ? 'style="visibility:hidden"' : ''} onclick="studyIdx--;renderStudyView()">Previous</button>`;
+  h += `<button class="btn btn-primary" onclick="${studyIdx === studyCards.length - 1 ? 'finishStudy()' : 'studyIdx++;renderStudyView()'}">${studyIdx === studyCards.length - 1 ? 'Done → Back to Path' : 'Next'}</button></div>`;
+  document.getElementById("v-study").innerHTML = h;
+}
+
+// ══════════════════ 7-DAY ROADMAP ══════════════════
+const ROADMAP=[
+  {day:1,title:"Day 1: Foundation — Know Your Weapon",desc:"Understand the system. Read the Ebook. Internalize the 5 Phases.",tasks:[
+    {id:"r1a",text:"Read the complete Ebook"},
+    {id:"r1b",text:"Study Mode: Phase 1 (Opening) — all flashcards"},
+    {id:"r1c",text:"Study Mode: Phase 2 (Tension) — all flashcards"},
+    {id:"r1d",text:"Write down the 5 Phases from memory"},
+    {id:"r1e",text:"Read the Affirmations out loud"},
+  ]},
+  {day:2,title:"Day 2: Knowledge Check — Phase 1 & 2",desc:"Test your knowledge. Pass the first two quizzes.",tasks:[
+    {id:"r2a",text:"Pass Quiz: Phase 1 (Opening) with 80%+"},
+    {id:"r2b",text:"Pass Quiz: Phase 2 (Tension) with 80%+"},
+    {id:"r2c",text:"Review wrong answers in Study Mode"},
+    {id:"r2d",text:"Practice Chat Simulator: Scenario 1"},
+    {id:"r2e",text:"Write 3 custom openers for different fan types"},
+  ]},
+  {day:3,title:"Day 3: Teaser Mastery",desc:"The teaser is the core skill. Today you master it.",tasks:[
+    {id:"r3a",text:"Study Mode: Phase 3 (Teaser) — all flashcards"},
+    {id:"r3b",text:"Pass Quiz: Phase 3 (Teaser) with 80%+"},
+    {id:"r3c",text:"Practice Chat Simulator: Scenario 2"},
+    {id:"r3d",text:"Write 3 different teaser scripts for 3 content types"},
+    {id:"r3e",text:"Read Cheat Sheet: Teaser Formulas"},
+  ]},
+  {day:4,title:"Day 4: Close & Upsell",desc:"Learn how to close the sale and immediately set up the second one.",tasks:[
+    {id:"r4a",text:"Study Mode: Phase 4 (FOMO) + Phase 5 (Upsell)"},
+    {id:"r4b",text:"Pass Quiz: Phase 4 (FOMO) with 80%+"},
+    {id:"r4c",text:"Pass Quiz: Phase 5 (Upsell) with 80%+"},
+    {id:"r4d",text:"Practice Chat Simulator: Scenario 3"},
+    {id:"r4e",text:"Write a complete script: Opener to Upsell"},
+  ]},
+  {day:5,title:"Day 5: Full Simulation",desc:"Time for real practice. Run through all simulator scenarios.",tasks:[
+    {id:"r5a",text:"Complete ALL Chat Simulator scenarios"},
+    {id:"r5b",text:"Review all Cheat Sheets"},
+    {id:"r5c",text:"Study Mode: Weak Spots review"},
+    {id:"r5d",text:"Mental Script: Write a complete funnel for 3 subscriber types"},
+    {id:"r5e",text:"Affirmations: Read out loud before practice"},
+  ]},
+  {day:6,title:"Day 6: Certification Prep",desc:"Exam day is tomorrow. Today you do the final review.",tasks:[
+    {id:"r6a",text:"Study Mode: Complete Review (all 50 cards)"},
+    {id:"r6b",text:"Re-take any quiz with score below 90%"},
+    {id:"r6c",text:"Review ALL wrong answers"},
+    {id:"r6d",text:"Practice timed: Do 20 questions in 10 min"},
+    {id:"r6e",text:"Mental rehearsal: Close your eyes and walk through a full sale"},
+  ]},
+  {day:7,title:"Day 7: Certification Day",desc:"Today you prove you're ready. Pass the Certification Exam.",tasks:[
+    {id:"r7a",text:"Affirmations: Read out loud"},
+    {id:"r7b",text:"Quick warm-up: Study Mode (10 random cards)"},
+    {id:"r7c",text:"TAKE THE CERTIFICATION EXAM"},
+    {id:"r7d",text:"Score 85%+ and get CERTIFIED"},
+    {id:"r7e",text:"Send verification code to your manager"},
+  ]},
+];
+
+function advanceDay(day){
+  const ud=getUD(user.uid);
+  ud.roadmap.day=day+1;
+  addXP(user.uid,25);
+  setUD(user.uid,ud);showDash();
+}
+
+// ══════════════════ CHAT SIMULATOR ══════════════════
+const SCENARIOS=[
+  {id:"sim1",name:"The New Subscriber",desc:"Brand new fan just subscribed. Build rapport and sell first PPV.",phase:"Opening → Teaser → Close",difficulty:"Beginner",
+  steps:[
+    {fan:"hey",choices:[
+      {text:"heyyy! omg I'm so happy you're here, I was just thinking about posting something special today 😊",correct:true,feedback:"Great opener — enthusiastic, personal, hints at content without selling."},
+      {text:"Hey babe, wanna see something hot?",correct:false,feedback:"Too salesy too fast. This is the #1 mistake — you sound like every other creator."},
+      {text:"hi how are you",correct:false,feedback:"Generic. Every creator sends this. Zero personality, zero effort."},
+    ]},
+    {fan:"haha thanks! just found your page and thought you were super cute",choices:[
+      {text:"aww you're sweet 🥰 what made you subscribe? I always love hearing what catches people's eye",correct:true,feedback:"Perfect. You're building connection AND gathering intel on what they like."},
+      {text:"thanks! want to see my exclusive content?",correct:false,feedback:"Too fast. You haven't built ANY rapport yet."},
+      {text:"thanks babe 😘",correct:false,feedback:"Dead end. This doesn't move the conversation forward."},
+    ]},
+    {fan:"honestly your gym pics are amazing, I'm really into fitness too",choices:[
+      {text:"no way! what do you train? I literally just got back from legs and I can barely walk lol 😅 actually... I filmed something at the gym today that's kinda wild",correct:true,feedback:"Brilliant. You matched his interest, showed personality, AND created a natural bridge to content."},
+      {text:"thanks! I have a gym video for $15, want it?",correct:false,feedback:"Zero build-up. You jumped from connection to transaction instantly."},
+      {text:"nice! what's your bench press?",correct:false,feedback:"Good rapport but doesn't steer toward content at all."},
+    ]},
+    {fan:"oh really? what did you film? 👀",choices:[
+      {text:"okay so I was doing hip thrusts and let's just say the angle was... something else 🔥 I was gonna post it but it's too much for the feed if you know what I mean 😏",correct:true,feedback:"Perfect teaser. Vivid description, exclusivity hint, no price mentioned yet."},
+      {text:"a workout video, $10",correct:false,feedback:"Product listing, not a teaser. Zero emotion, zero curiosity built."},
+      {text:"just some gym stuff haha",correct:false,feedback:"You killed the curiosity you just created. Never downplay your own content."},
+    ]},
+    {fan:"omg I definitely need to see that 🥵",choices:[
+      {text:"[Send PPV] I made it just for fans like you who actually appreciate the effort I put in... don't share it with anyone though, it's our little secret 🤫❤️",correct:true,feedback:"Clean close. He asked for it, you delivered with exclusivity framing. The 'our secret' creates intimacy."},
+      {text:"okay buying link is [link]",correct:false,feedback:"Transactional and cold. After all that build-up, this kills the mood."},
+      {text:"hmm idk if I should share it...",correct:false,feedback:"He already said he wants it. Don't stall — that's not building tension, that's losing the sale."},
+    ]},
+  ]},
+  {id:"sim2",name:"The Objection Handler",desc:"Fan likes the content but says 'too expensive'. Handle the objection.",phase:"Close → Objection → FOMO",difficulty:"Intermediate",
+  steps:[
+    {fan:"hmm that's a lot... idk if I can afford that rn",choices:[
+      {text:"I totally get it babe 💕 honestly I was thinking about raising the price because everyone who's seen it says it's way too cheap for what it is... but I'll keep it at this price for you right now",correct:true,feedback:"Perfect reframe. Empathy + value boost + subtle scarcity. You didn't lower the price."},
+      {text:"okay I can do half price for you",correct:false,feedback:"Never discount on first objection. It signals the original price was fake."},
+      {text:"it's worth it trust me",correct:false,feedback:"Too pushy and doesn't address his concern at all."},
+    ]},
+    {fan:"hmm I'll think about it",choices:[
+      {text:"[Wait 3 minutes] hey just wanted to let you know I might take that down later tonight, I don't usually keep stuff like that available for too long... just didn't want you to miss it 💕",correct:true,feedback:"3-5 Minute Rule executed perfectly. Scarcity without desperation."},
+      {text:"okay let me know!",correct:false,feedback:"You just let a warm lead go cold. 'Let me know' = they'll never come back."},
+      {text:"come on just buy it",correct:false,feedback:"Desperation. This destroys the exclusive, intimate vibe you built."},
+    ]},
+    {fan:"okay fine you convinced me 😅 sending now",choices:[
+      {text:"yesss you won't regret it babe!! 🔥 honestly wait until you see it, I think you're gonna love the ending especially 😏",correct:true,feedback:"Great reaction. Genuine excitement + you're already setting up for potential upsell by teasing 'the ending'."},
+      {text:"thanks",correct:false,feedback:"Anti-climactic. Match their energy. They just made a purchase — celebrate it."},
+      {text:"great want another one too?",correct:false,feedback:"Way too fast for upsell. Let them enjoy what they bought first."},
+    ]},
+  ]},
+  {id:"sim3",name:"The Upsell Master",desc:"Fan just bought a PPV and loves it. Time to upsell.",phase:"Post-Purchase → Upsell",difficulty:"Advanced",
+  steps:[
+    {fan:"holy shit 🔥🔥🔥 that was insane",choices:[
+      {text:"omgg right?? I was so nervous sharing that actually 😅 like that was really personal for me... did you like the part where I [specific detail]?",correct:true,feedback:"React first. Show vulnerability. Ask about specifics to deepen connection."},
+      {text:"glad you liked it! want to see another one?",correct:false,feedback:"Too fast and transactional. You need to build more before the upsell bridge."},
+      {text:"thanks! 😊",correct:false,feedback:"Dead end again. You need to keep the energy flowing toward upsell."},
+    ]},
+    {fan:"yes!! that part was my favorite, you looked incredible",choices:[
+      {text:"you know what's funny... I actually filmed something right after that too, like a behind the scenes thing that's even more raw and unfiltered 😈 I wasn't even gonna share it but since you vibed with the other one so much...",correct:true,feedback:"Perfect BTS bridge. Feels natural, exclusive, and like a continuation — not a new sale."},
+      {text:"I have 5 more videos, want the bundle?",correct:false,feedback:"Product catalogue approach. Kills all the intimate energy you built."},
+      {text:"aww thanks babe! talk soon?",correct:false,feedback:"You just missed the upsell window. He's at peak dopamine RIGHT NOW."},
+    ]},
+    {fan:"wait there's more?! yes please show me",choices:[
+      {text:"[Send PPV - higher price] this one is the uncut version... like I said it's pretty raw so I'm only sharing with you 🤫 it's a bit more because it's way longer and more intense",correct:true,feedback:"Clean upsell close. Justified higher price (longer, more intense), maintained exclusivity, he asked for it."},
+      {text:"[Send same price PPV] here you go!",correct:false,feedback:"Missed opportunity to upsell at higher price. BTS framing justifies premium."},
+      {text:"I'll send it tomorrow okay?",correct:false,feedback:"The 5-minute window is NOW. Tomorrow = the moment is gone forever."},
+    ]},
+  ]},
+];
+
+let simState={idx:0,scenarioId:"",score:0,total:0};
+
+function startSim(scId){
+  const sc=SCENARIOS.find(s=>s.id===scId);
+  if(!sc){console.warn("Scenario not found:",scId);showDash();return;}
+  simState={idx:0,scenarioId:scId,score:0,total:sc.steps.length,messages:[]};
+  renderSim();
+}
+
+function renderSim(){
+  showV("v-sim");const sc=SCENARIOS.find(s=>s.id===simState.scenarioId);if(!sc)return;
+  const step=sc.steps[simState.idx];const isEnd=!step;
+  let h=``;
+  if(isEnd){
+    const pct=Math.round(simState.score/simState.total*100);
+    if(user){const ud=getUD(user.uid);if(!ud.simCompleted)ud.simCompleted=[];if(!ud.simCompleted.includes(sc.id)){ud.simCompleted.push(sc.id);addXP(user.uid,CFG.xpPerSimComplete)}setUD(user.uid,ud);checkAchievements(user.uid)}
+    h+=`<div class="results slide-up"><div class="score-ring" style="border:5px solid ${pct>=70?'var(--green)':'var(--red)'}"><span class="score-num" style="color:${pct>=70?'var(--green)':'var(--red)'}">${pct}%</span><span class="score-lbl">${simState.score}/${simState.total}</span></div>`;
+    h+=`<div class="result-msg ${pct>=70?'pass':'fail'}">${pct>=70?'Great Job!':'Keep Practicing'}</div>`;
+    h+=`<div class="result-sub">${sc.name}</div>`;
+    h+=`<button class="btn btn-primary" style="flex:none;padding:14px 30px;margin-top:10px;width:100%" onclick="finishSim()">← Back to Your Path</button></div>`;
+  } else {
+    h+=`<div class="sim-wrap">`;
+    h+=`<div class="sim-header"><div class="sim-avatar">${sc.name.charAt(4)}</div><div><div class="sim-name">${sc.name}</div><div class="sim-status">Online</div></div><div style="margin-left:auto;font-size:.78rem;color:var(--text3)">Step ${simState.idx+1}/${simState.total}</div></div>`;
+    h+=`<div class="sim-chat" id="simChat">`;
+    simState.messages.forEach(m=>{
+      h+=`<div class="sim-msg ${m.sender}"><div class="sim-bubble">${m.text}</div></div>`;
+    });
+    h+=`<div class="sim-msg fan"><div class="sim-bubble">${step.fan}</div></div>`;
+    h+=`</div>`;
+    h+=`<div class="sim-choices" id="simChoices">`;
+    h+=`<div style="font-size:.75rem;color:var(--text4);margin-bottom:6px">Choose your response:</div>`;
+    step.choices.forEach((c,i)=>{
+      h+=`<button class="sim-choice" onclick="pickSim(${i})">${c.text}</button>`;
+    });
+    h+=`</div></div>`;
+  }
+  document.getElementById("v-sim").innerHTML=h;
+  const chat=document.getElementById("simChat");if(chat)chat.scrollTop=chat.scrollHeight;
+}
+
+function pickSim(ci){
+  const sc=SCENARIOS.find(s=>s.id===simState.scenarioId);
+  if(!sc){showDash();return;}
+  if(simState.idx>=sc.steps.length){renderSim();return;}
+  const step=sc.steps[simState.idx];
+  if(!step||!step.choices||ci>=step.choices.length){renderSim();return;}
+  const choice=step.choices[ci];
+  const btns=document.querySelectorAll('.sim-choice');
+  btns.forEach((b,i)=>{
+    b.classList.add(step.choices[i].correct?'correct':'wrong');
+    b.style.pointerEvents='none';
+  });
+  const container=document.getElementById("simChoices");
+  const fb=document.createElement("div");
+  fb.className="sim-feedback";
+  fb.innerHTML=`<b>${choice.correct?'Perfect!':'Not quite.'}</b> ${choice.feedback}`;
+  container.appendChild(fb);
+  const btn=document.createElement("button");
+  btn.className="btn btn-primary";
+  btn.style.cssText="margin-top:10px;width:100%";
+  btn.textContent=simState.idx<sc.steps.length-1?"Next":"See Results";
+  btn.onclick=()=>{
+    simState.messages.push({sender:"fan",text:step.fan});
+    simState.messages.push({sender:"chatter",text:choice.text});
+    if(choice.correct)simState.score++;
+    simState.idx++;
+    renderSim();
+  };
+  container.appendChild(btn);
+  const chat=document.getElementById("simChat");
+  const msgDiv=document.createElement("div");
+  msgDiv.className="sim-msg chatter";
+  msgDiv.innerHTML=`<div class="sim-bubble">${choice.text}</div>`;
+  chat.appendChild(msgDiv);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function finishSim() {
+  if (user) {
+    const ud = getUD(user.uid);
+    if (ud.roadmap) {
+      const curDay = ud.roadmap.day || 1;
+      const rd = ROADMAP[curDay - 1];
+      if (rd) {
+        rd.tasks.forEach(t => {
+          const tl = t.text.toLowerCase();
+          if ((tl.includes('simulator') || tl.includes('chat simulator') || tl.includes('complete all')) && !ud.roadmap.tasks[t.id]) {
+            ud.roadmap.tasks[t.id] = true;
+            addXP(user.uid, 5);
+          }
+        });
+        setUD(user.uid, ud);
+      }
+    }
+  }
+  showDash();
+}
+
+// ══════════════════ REFERENCE CARDS ══════════════════
+const REFS=[
+  {title:"Phase 1: Opening — Cheat Sheet",icon:"👋",content:`
+    <p><strong>Goal:</strong> Build trust and feel REAL. Not salesy.</p>
+    <div class="ref-tip"><strong>Golden Rule:</strong> Reference something specific about them or share something personal about yourself.</div>
+    <p><strong>Do:</strong></p>
+    <div class="ref-example">• Reference their bio/interests<br>• Share a personal detail or story<br>• Be enthusiastic and warm<br>• Ask engaging questions<br>• Use humor and personality</div>
+    <p><strong>Don't:</strong></p>
+    <div class="ref-example">• "Hey babe" / "How are you?" (generic)<br>• Send PPV in first 5 messages<br>• Copy-paste same opener to everyone<br>• Be robotic or formal<br>• Ask yes/no questions</div>
+  `},
+  {title:"Phase 2: Build Tension — Cheat Sheet",icon:"🔥",content:`
+    <p><strong>Goal:</strong> Create curiosity. Make them WANT before you offer.</p>
+    <div class="ref-tip"><strong>Golden Rule:</strong> The fan should ask YOU about your content, not the other way around.</div>
+    <p><strong>Steering Techniques:</strong></p>
+    <div class="ref-example">• <strong>Bridge:</strong> Connect their topic to yours naturally<br>• <strong>Thread:</strong> Weave your topic into conversation<br>• <strong>Emotional redirect:</strong> Use their feelings as a bridge</div>
+  `},
+  {title:"Phase 3: Teaser — Cheat Sheet",icon:"🎬",content:`
+    <p><strong>Goal:</strong> Paint a mental picture so vivid they NEED to see it.</p>
+    <div class="ref-tip"><strong>Golden Rule:</strong> Never say "buy." Describe the content like you're confiding in a friend.</div>
+    <p><strong>Mental Movie Formula:</strong></p>
+    <div class="ref-example">1. Set the scene (where, when, mood)<br>2. Add sensory details<br>3. Tease the climax without revealing it<br>4. Add exclusivity</div>
+  `},
+  {title:"Phase 4: FOMO & Closing — Cheat Sheet",icon:"💰",content:`
+    <p><strong>Goal:</strong> Create urgency. Make the purchase feel NOW or NEVER.</p>
+    <div class="ref-tip"><strong>3-5 Minute Rule:</strong> If they hesitate, follow up within 3-5 minutes. Not hours.</div>
+    <div class="ref-tip"><strong>Never:</strong> Lower price on first objection. It signals the original price was fake.</div>
+  `},
+  {title:"Phase 5: Upsell — Cheat Sheet",icon:"🚀",content:`
+    <p><strong>Goal:</strong> Sell PPV #2 within 5 minutes of PPV #1 purchase.</p>
+    <div class="ref-tip"><strong>5-Minute Window:</strong> Post-purchase dopamine = lowest resistance. Strike NOW.</div>
+    <p><strong>Bridge Types:</strong></p>
+    <div class="ref-example">• BTS (Behind the scenes)<br>• Continuation (sequel)<br>• Different angle<br>• Custom content</div>
+  `},
+  {title:"Affirmations — Daily Mindset",icon:"🧠",content:`
+    <p><strong>Read these EVERY DAY before your shift:</strong></p>
+    <div class="ref-example" style="color:var(--green);font-weight:700;line-height:2">
+    ✓ I am a Closer. Every chat is an opportunity.<br>
+    ✓ I don't improvise. I execute.<br>
+    ✓ Every "no" brings me closer to the next "yes."<br>
+    ✓ I am the best at what I do. Period.</div>
+  `},
+];
+
+function toggleRef(i){
+  const body=document.getElementById(`refB${i}`);
+  const toggle=document.getElementById(`refT${i}`);
+  body.classList.toggle("open");
+  toggle.textContent=body.classList.contains("open")?"▲":"▼";
+}
+
+// ══════════════════ ACHIEVEMENTS ══════════════════
+const ACHIEVEMENTS=[
+  {id:"first_quiz",icon:"📝",name:"First Steps",desc:"Complete your first quiz",check:uid=>getUD(uid).results?.length>0},
+  {id:"phase1_pass",icon:"👋",name:"Opener Pro",desc:"Pass Phase 1 quiz",check:uid=>(best(uid,"quiz1")||0)>=CFG.pass.quiz},
+  {id:"phase2_pass",icon:"🔥",name:"Tension Builder",desc:"Pass Phase 2 quiz",check:uid=>(best(uid,"quiz2")||0)>=CFG.pass.quiz},
+  {id:"phase3_pass",icon:"🎬",name:"Teaser Expert",desc:"Pass Phase 3 quiz",check:uid=>(best(uid,"quiz3")||0)>=CFG.pass.quiz},
+  {id:"phase4_pass",icon:"💰",name:"FOMO Master",desc:"Pass Phase 4 quiz",check:uid=>(best(uid,"quiz4")||0)>=CFG.pass.quiz},
+  {id:"phase5_pass",icon:"🚀",name:"Upsell King",desc:"Pass Phase 5 quiz",check:uid=>(best(uid,"quiz5")||0)>=CFG.pass.quiz},
+  {id:"all_phases",icon:"⭐",name:"All Phases Clear",desc:"Pass all 5 phase quizzes",check:uid=>Object.keys(BANK).every(q=>(best(uid,q)||0)>=CFG.pass.quiz)},
+  {id:"certified",icon:"🏆",name:"Certified Closer",desc:"Pass the Certification Exam",check:uid=>(best(uid,"cert")||0)>=CFG.pass.cert},
+  {id:"perfect_quiz",icon:"💯",name:"Perfectionist",desc:"Score 100% on any quiz",check:uid=>{const ud=getUD(uid);return Object.values(ud.attempts||{}).some(a=>a.some(x=>x.pct===100))}},
+  {id:"streak3",icon:"🔥",name:"On Fire",desc:"3-day login streak",check:uid=>(getUD(uid).streak||0)>=3},
+  {id:"streak7",icon:"💥",name:"Unstoppable",desc:"7-day login streak",check:uid=>(getUD(uid).streak||0)>=7},
+  {id:"sim_first",icon:"💬",name:"Chat Rookie",desc:"Complete first simulator",check:uid=>(getUD(uid).simCompleted||[]).length>0},
+  {id:"sim_all",icon:"🎙",name:"Conversation God",desc:"Complete all simulators",check:uid=>(getUD(uid).simCompleted||[]).length>=SCENARIOS.length},
+  {id:"level5",icon:"👑",name:"Rising Star",desc:"Reach Level 5",check:uid=>getLevel(getUD(uid).xp||0)>=5},
+  {id:"level10",icon:"💎",name:"Diamond",desc:"Reach Level 10",check:uid=>getLevel(getUD(uid).xp||0)>=10},
+];
+
+function checkAchievements(uid){
+  const ud=getUD(uid);
+  if(!ud.achievements)ud.achievements=[];
+  let newUnlocked=false;
+  ACHIEVEMENTS.forEach(a=>{
+    if(!ud.achievements.includes(a.id)&&a.check(uid)){
+      ud.achievements.push(a.id);
+      ud.xp=(ud.xp||0)+20;
+      newUnlocked=true;
+    }
+  });
+  if(newUnlocked)setUD(uid,ud);
+}
+
+function renderAchieveTab(uid){
+  checkAchievements(uid);
+  const ud=getUD(uid);
+  const unlocked=(ud.achievements||[]).length;
+  let h=`<h3 style="font-size:.95rem;margin-bottom:4px;color:var(--accent)">Achievements</h3>`;
+  h+=`<p style="color:var(--text3);font-size:.82rem;margin-bottom:14px">${unlocked}/${ACHIEVEMENTS.length} unlocked</p>`;
+  h+=`<div class="ach-grid">`;
+  ACHIEVEMENTS.forEach(a=>{
+    const has=(ud.achievements||[]).includes(a.id);
+    h+=`<div class="ach ${has?'unlocked':'locked'}"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
+// ══════════════════ ANALYTICS ══════════════════
+function renderAnalyticsTab(uid){
+  const ud=getUD(uid);
+  const results=ud.results||[];
+  const totalAtt=results.length;
+  const avgScore=totalAtt?Math.round(results.reduce((s,r)=>s+r.pct,0)/totalAtt):0;
+  const passed=results.filter(r=>r.passed).length;
+  const passRate=totalAtt?Math.round(passed/totalAtt*100):0;
+  const totalTime=results.reduce((s,r)=>s+(r.time||0),0);
+
+  let h=`<h3 style="font-size:.95rem;margin-bottom:12px;color:var(--accent)">Your Analytics</h3>`;
+  h+=`<div class="analytics-grid">
+    <div class="stat-card"><div class="stat-val">${totalAtt}</div><div class="stat-lbl">Total Attempts</div></div>
+    <div class="stat-card"><div class="stat-val">${avgScore}%</div><div class="stat-lbl">Avg Score</div></div>
+    <div class="stat-card"><div class="stat-val">${passRate}%</div><div class="stat-lbl">Pass Rate</div></div>
+    <div class="stat-card"><div class="stat-val">${Math.round(totalTime/60)}m</div><div class="stat-lbl">Study Time</div></div>
+  </div>`;
+  h+=`<div class="chart-box"><h3>Phase Performance</h3><canvas id="chartPhase" height="200"></canvas></div>`;
+  h+=`<div class="chart-box"><h3>Score Over Time</h3><canvas id="chartTime" height="200"></canvas></div>`;
+  if(results.length){
+    h+=`<div class="detail-box"><h3>Recent Results</h3>`;
+    results.slice(-10).reverse().forEach(r=>{
+      const dt=new Date(r.date);
+      h+=`<div class="detail-row"><span class="dl">${r.qname} · ${dt.toLocaleDateString()}</span><span class="dv ${r.passed?'dv-g':'dv-b'}">${r.pct}% ${r.passed?'PASS':'FAIL'}</span></div>`;
+    });
+    h+=`</div>`;
+  }
+  return h;
+}
+
+function renderCharts(uid){
+  const ud=getUD(uid);
+  const phaseCtx=document.getElementById("chartPhase");
+  if(phaseCtx){
+    const labels=Object.values(BANK).map(b=>b.phase);
+    const scores=Object.keys(BANK).map(q=>best(uid,q)||0);
+    const colors=Object.values(BANK).map(b=>b.color);
+    new Chart(phaseCtx,{type:'bar',data:{labels,datasets:[{label:'Best Score %',data:scores,backgroundColor:colors.map(c=>c+'66'),borderColor:colors,borderWidth:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100,grid:{color:'#1a1a2e'},ticks:{color:'#666'}},x:{grid:{display:false},ticks:{color:'#666'}}}}});
+  }
+  const timeCtx=document.getElementById("chartTime");
+  if(timeCtx&&ud.results?.length){
+    const recent=ud.results.slice(-15);
+    const labels=recent.map((r,i)=>`#${i+1}`);
+    const data=recent.map(r=>r.pct);
+    new Chart(timeCtx,{type:'line',data:{labels,datasets:[{label:'Score %',data,borderColor:'#E94560',backgroundColor:'rgba(233,69,96,.1)',fill:true,tension:.3,pointBackgroundColor:'#E94560'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,max:100,grid:{color:'#1a1a2e'},ticks:{color:'#666'}},x:{grid:{display:false},ticks:{color:'#666'}}}}});
+  }
+}
+
+// ══════════════════ ADMIN (Server-backed) ══════════════════
+function toggleAdmin() { if (isAdm) { if (user) showDash(); else showV("v-login"); isAdm = false; return; } showV("v-admin-login"); document.getElementById("adminError").textContent = ""; }
+
+async function adminLogin() {
+  const pw = document.getElementById("adminPw").value;
+  const err = document.getElementById("adminError");
+  if (!pw) { err.textContent = "Please enter the manager password."; return; }
+  const r = await api("/admin/login", "POST", { password: pw }, "Verifying...");
+  if (!r.ok) { err.textContent = r.error || "Incorrect password."; return; }
+  isAdm = true; await rAdm("overview");
+}
+function genPass() { const w = ["blue","red","fast","cool","bold","fire","star","moon","sun","gold","iron","storm","dark","ice","wave","sky","lion","fox","hawk","bear"]; return w[Math.floor(Math.random()*w.length)] + w[Math.floor(Math.random()*w.length)] + (Math.floor(Math.random()*900)+100); }
+
+async function rAdm(tab = "overview") {
+  showV("v-admin");
+  showLoading("Loading data...");
+  const accs = await api("/accounts");
+  const strikes = await api("/strikes");
+  hideLoading();
+  const uids = Array.isArray(accs) ? accs.map(a => a.uid) : [];
+  accs.forEach(a => { _cache.accounts[a.uid] = { displayName: a.displayName }; _cache.userData[a.uid] = a.userData || initUser(a.uid); });
+  const res = await allRes();
+  
+  // Count strikes per user
+  const strikeCounts = {};
+  if (Array.isArray(strikes)) strikes.forEach(s => { strikeCounts[s.uid] = (strikeCounts[s.uid] || 0) + 1; });
+  const totalStrikes = Object.values(strikeCounts).reduce((a,b) => a+b, 0);
+
+  let h = `<h2 style="color:var(--accent);margin-bottom:14px;font-size:1.1rem">Manager Dashboard</h2>
+  <div class="a-tabs"><span class="a-tab ${tab==='overview'?'active':''}" onclick="rAdm('overview')">Overview</span><span class="a-tab ${tab==='strikes'?'active':''}" onclick="rAdm('strikes')" style="position:relative">Strikes${totalStrikes > 0 ? '<span style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:.65rem;padding:2px 5px;border-radius:8px">'+totalStrikes+'</span>' : ''}</span><span class="a-tab ${tab==='results'?'active':''}" onclick="rAdm('results')">Results</span><span class="a-tab ${tab==='accounts'?'active':''}" onclick="rAdm('accounts')">Accounts</span><span class="a-tab ${tab==='verify'?'active':''}" onclick="rAdm('verify')">Verify</span></div>`;
+
+  if (tab === "overview") {
+    const cert = uids.filter(u => (best(u,"cert")||0) >= CFG.pass.cert).length;
+    const avg = res.length ? Math.round(res.reduce((s,r) => s+r.pct, 0)/res.length) : 0;
+    const atRisk = uids.filter(u => (strikeCounts[u] || 0) >= 2).length;
+    h += `<div class="analytics-grid"><div class="stat-card"><div class="stat-val">${uids.length}</div><div class="stat-lbl">Chatters</div></div><div class="stat-card"><div class="stat-val">${cert}</div><div class="stat-lbl">Certified</div></div><div class="stat-card"><div class="stat-val" style="color:${totalStrikes > 0 ? 'var(--red)' : 'var(--accent)'}">${totalStrikes}</div><div class="stat-lbl">Total Strikes</div></div><div class="stat-card"><div class="stat-val" style="color:${atRisk > 0 ? 'var(--orange)' : 'var(--accent)'}">${atRisk}</div><div class="stat-lbl">At Risk (2+)</div></div></div>`;
+    if (uids.length) {
+      h += `<table class="a-table"><tr><th>Chatter</th><th>Day</th><th>Strikes</th><th>Today</th><th>Status</th></tr>`;
+      for (const uid of uids) {
+        const a = accs.find(x => x.uid === uid); 
+        const ud = getUD(uid);
+        const curDay = ud.roadmap?.day || 1;
+        const sc = strikeCounts[uid] || 0;
+        const lastActive = ud.lastLogin || 'Never';
+        const today = new Date().toDateString();
+        const activeToday = ud.lastLogin === today;
+        const ic = (best(uid,"cert")||0) >= CFG.pass.cert;
+        const tasksToday = curDay <= 7 ? ROADMAP[curDay-1]?.tasks?.filter(t => ud.roadmap?.tasks?.[t.id]).length || 0 : '✓';
+        const totalTasks = curDay <= 7 ? ROADMAP[curDay-1]?.tasks?.length || 0 : 0;
+        const dayDone = curDay > 7 || (totalTasks > 0 && tasksToday === totalTasks);
+        h += `<tr><td style="font-weight:700;cursor:pointer;color:var(--accent)" onclick="showUserDetail('${uid}')">${a.displayName}</td>`;
+        h += `<td>${curDay > 7 ? 'Done' : 'Day ' + curDay}</td>`;
+        h += `<td class="${sc >= 3 ? 'fc' : sc >= 2 ? 'wc' : sc > 0 ? 'fc' : ''}">${sc > 0 ? '⚠️ ' + sc : '✓ 0'}</td>`;
+        h += `<td class="${dayDone ? 'pc' : activeToday ? 'wc' : 'fc'}">${curDay > 7 ? '✓' : dayDone ? tasksToday + '/' + totalTasks + ' ✓' : activeToday ? tasksToday + '/' + totalTasks : '❌ Inactive'}</td>`;
+        h += `<td class="${ic ? 'pc' : ''}">${ic ? "CERTIFIED" : curDay > 7 ? "Complete" : "Training"}</td></tr>`;
+      } h += `</table>`;
+      // Weekly Report
+      const wr = getWeeklyReport(accs);
+      h += `<div class="detail-box" style="margin-top:16px"><h3>📊 This Week</h3>
+        <div class="detail-row"><span class="dl">Active Users (7d)</span><span class="dv">${wr.active}/${uids.length}</span></div>
+        <div class="detail-row"><span class="dl">Quizzes Taken</span><span class="dv">${wr.totalQuizzes}</span></div>
+        <div class="detail-row"><span class="dl">Avg Score</span><span class="dv">${wr.avgScore}%</span></div>
+        <div class="detail-row"><span class="dl">Total Certified</span><span class="dv dv-g">${wr.certified}</span></div>
+      </div>`;
+    } else h += `<div class="empty">No accounts yet.</div>`;
+  }
+  
+  if (tab === "strikes") {
+    // Find users who haven't completed today's tasks
+    const today = new Date().toDateString();
+    const slackers = [];
+    for (const uid of uids) {
+      const ud = getUD(uid);
+      const curDay = ud.roadmap?.day || 1;
+      if (curDay > 7) continue; // Already done with program
+      const rd = ROADMAP[curDay - 1];
+      if (!rd) continue;
+      const tasksDone = rd.tasks.filter(t => ud.roadmap?.tasks?.[t.id]).length;
+      const activeToday = ud.lastLogin === today;
+      const a = accs.find(x => x.uid === uid);
+      if (tasksDone < rd.tasks.length) {
+        slackers.push({ uid, name: a.displayName, day: curDay, done: tasksDone, total: rd.tasks.length, active: activeToday, strikes: strikeCounts[uid] || 0 });
+      }
+    }
+    
+    h += `<h3 style="color:#fff;margin-bottom:10px;font-size:.95rem">⚠️ Incomplete Today (${slackers.length})</h3>`;
+    if (slackers.length) {
+      h += `<table class="a-table"><tr><th>Chatter</th><th>Day</th><th>Progress</th><th>Active</th><th>Strikes</th><th>Action</th></tr>`;
+      slackers.forEach(s => {
+        h += `<tr><td style="font-weight:700">${s.name}</td><td>Day ${s.day}</td><td class="wc">${s.done}/${s.total}</td><td class="${s.active ? 'pc' : 'fc'}">${s.active ? 'Yes' : 'No'}</td><td class="${s.strikes >= 2 ? 'fc' : ''}">${s.strikes}</td><td><button class="del-btn" onclick="addStrike('${s.uid}','${s.name}')">+ Strike</button></td></tr>`;
+      });
+      h += `</table>`;
+      if (slackers.length > 1) {
+        h += `<button class="reset-all" style="margin-top:10px" onclick="bulkStrike()">⚠️ Strike All ${slackers.length} Incomplete</button>`;
+      }
+    } else {
+      h += `<div style="background:var(--green2);border:1px solid var(--green);border-radius:var(--radius);padding:16px;color:var(--green);text-align:center">✓ Everyone completed their tasks today!</div>`;
+    }
+    
+    h += `<div style="display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px"><h3 style="color:#fff;font-size:.95rem">📋 Strike History</h3><button class="export-btn" onclick="exportStrikes()">📥 Export CSV</button></div>`;
+    if (Array.isArray(strikes) && strikes.length) {
+      h += `<table class="a-table"><tr><th>Date</th><th>Chatter</th><th>Reason</th><th>Action</th></tr>`;
+      strikes.slice(0, 50).forEach(s => {
+        const dt = new Date(s.date);
+        h += `<tr><td>${dt.toLocaleDateString()}</td><td style="font-weight:700">${s.name || s.uid}</td><td>${s.reason || 'Missed tasks'}</td><td><button class="rst-btn" onclick="removeStrike(${s.id})">Remove</button></td></tr>`;
+      });
+      h += `</table>`;
+    } else {
+      h += `<div class="empty">No strikes yet. Good job team! 🎉</div>`;
+    }
+    
+    h += `<h3 style="color:#fff;margin:20px 0 10px;font-size:.95rem">➕ Manual Strike</h3>`;
+    h += `<div style="display:flex;gap:8px;flex-wrap:wrap"><select id="strikeUser" class="acc-input" style="flex:1;min-width:150px"><option value="">Select user...</option>`;
+    accs.forEach(a => { h += `<option value="${a.uid}">${a.displayName}</option>`; });
+    h += `</select><input id="strikeReason" class="acc-input" placeholder="Reason (optional)" style="flex:2;min-width:200px"><button class="add-btn" onclick="manualStrike()">Add Strike</button></div>`;
+  }
+
+  if (tab === "results") {
+    h += `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="color:var(--text3);font-size:.85rem">${res.length} total results</span>
+      <button class="export-btn" onclick="exportAllResults()">📥 Export CSV</button>
+    </div>`;
+    if (res.length) {
+      h += `<table class="a-table"><tr><th>Date</th><th>Name</th><th>Quiz</th><th>Score</th><th>Result</th></tr>`;
+      res.slice(0, 100).forEach(r => {
+        const dt = new Date(r.date);
+        h += `<tr><td>${dt.toLocaleDateString()} ${dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td><td style="font-weight:700;cursor:pointer;color:var(--accent)" onclick="showUserDetail('${r.uid}')">${r.name || r.uid}</td><td>${r.qname}</td><td>${r.score}/${r.total} (${r.pct}%)</td><td class="${r.passed ? 'pc' : 'fc'}">${r.passed ? 'PASS' : 'FAIL'}</td></tr>`;
+      }); h += `</table>`;
+    } else h += `<div class="empty">No results yet.</div>`;
+  }
+
+  if (tab === "leaderboard") {
+    const board = uids.map(uid => {
+      const ud = getUD(uid); const a = accs.find(x => x.uid === uid);
+      return { uid, name: a.displayName, xp: ud.xp || 0, level: getLevel(ud.xp || 0), cert: (best(uid,"cert")||0) >= CFG.pass.cert, phases: Object.keys(BANK).filter(q => (best(uid,q)||0) >= CFG.pass.quiz).length };
+    }).sort((a, b) => b.xp - a.xp);
+    if (board.length) {
+      h += `<table class="a-table"><tr><th>#</th><th>Chatter</th><th>Level</th><th>XP</th><th>Phases</th><th>Cert</th></tr>`;
+      board.forEach((b, i) => { h += `<tr><td style="font-weight:700;color:${i===0?'gold':i===1?'silver':i===2?'#cd7f32':'var(--text3)'}">${i+1}</td><td style="font-weight:700">${b.name}</td><td>${b.level}</td><td class="pc">${b.xp}</td><td>${b.phases}/5</td><td class="${b.cert?'pc':'fc'}">${b.cert?'YES':'NO'}</td></tr>`; });
+      h += `</table>`;
+    } else h += `<div class="empty">No data.</div>`;
+  }
+
+  if (tab === "accounts") {
+    h += `<h3 style="color:#fff;margin-bottom:10px;font-size:.95rem">Add New Chatter</h3>
+    <div class="acc-grid"><div><div class="lbl">Username</div><input class="acc-input" id="nU" placeholder="e.g. maria"></div><div><div class="lbl">Display Name</div><input class="acc-input" id="nN" placeholder="e.g. Maria Santos"></div>
+    <div><div class="lbl">Password</div><div style="display:flex;gap:4px"><input class="acc-input" id="nP" placeholder="auto" style="flex:1"><button onclick="document.getElementById('nP').value=genPass()" style="background:var(--bg3);color:var(--accent);border:1px solid var(--accent);border-radius:5px;padding:5px 10px;cursor:pointer;font-size:.75rem;min-height:36px">Gen</button></div></div>
+    <div style="padding-top:16px"><button class="add-btn" onclick="doAdd()">Add</button></div></div>
+    <div id="accMsg" style="color:var(--green);font-size:.82rem;min-height:18px;margin-bottom:12px"></div>`;
+    if (uids.length) {
+      h += `<table class="a-table"><tr><th>Username</th><th>Display Name</th><th>Level</th><th>Actions</th></tr>`;
+      for (const a of accs) { const lv = getLevel(getUD(a.uid).xp || 0);
+        h += `<tr><td>${a.uid}</td><td style="font-weight:700">${a.displayName}</td><td>${lv}</td><td><button class="rst-btn" onclick="doRst('${a.uid}')">Reset</button> <button class="del-btn" onclick="doDel('${a.uid}')">Delete</button></td></tr>`;
+      } h += `</table>`;
+    }
+  }
+
+  if (tab === "verify") { h += `<div class="verify-box"><p style="color:var(--accent);font-weight:700;margin-bottom:6px">Paste Verification Code</p><textarea id="vIn" placeholder="Paste code here..."></textarea><button class="verify-btn" onclick="doVerify()">Verify</button><div id="vRes"></div></div>`; }
+
+  h += `<div style="margin-top:20px"><button class="btn btn-secondary" style="flex:none;padding:10px 16px" onclick="isAdm=false;if(user)showDash();else showV('v-login')">Exit</button></div>`;
+  document.getElementById("v-admin").innerHTML = h;
+}
+
+async function doAdd() {
+  const u = document.getElementById("nU").value.trim(), n = document.getElementById("nN").value.trim();
+  let p = document.getElementById("nP").value; if (!p) p = genPass();
+  const msg = document.getElementById("accMsg");
+  if (!u) { msg.style.color = "var(--red)"; msg.textContent = "Username required."; return; }
+  const r = await addAcc(u, p, n || u);
+  if (!r.ok) { msg.style.color = "var(--red)"; msg.textContent = r.error || "Failed to create account."; return; }
+  msg.style.color = "var(--green)"; msg.textContent = `Created! User: ${r.uid} | Pass: ${r.password}`;
+  document.getElementById("nU").value = ""; document.getElementById("nN").value = ""; document.getElementById("nP").value = "";
+  setTimeout(() => rAdm("accounts"), 2000);
+}
+async function doDel(uid) { if (!confirm(`Delete this account and all progress?`)) return; await delAcc(uid); rAdm("accounts"); }
+async function doRst(uid) { if (!confirm(`Reset all progress for this user?`)) return; await api("/accounts/" + uid + "/reset", "POST", null, "Resetting..."); _cache.userData[uid] = initUser(uid); rAdm("overview"); }
+function doVerify() {
+  const r = dkCode(document.getElementById("vIn").value), el = document.getElementById("vRes");
+  if (r.valid) { el.className = "verify-result valid"; el.innerHTML = `<b>✓ VALID</b><br>Name: ${r.name}<br>Quiz: ${r.qname}<br>Score: ${r.pct}%<br>Attempt: #${r.num}<br>Date: ${r.date}<br>Status: ${r.passed ? 'PASS ✓' : 'FAIL ✗'}`; }
+  else { el.className = "verify-result invalid"; el.innerHTML = `<b>✗ INVALID</b> — Code is fake or corrupted.`; }
+}
+
+// ══════════════════ STRIKES ══════════════════
+async function addStrike(uid, name) {
+  if (!confirm(`Add strike to ${name}?`)) return;
+  await api("/strikes", "POST", { uid, reason: "Missed daily tasks" }, "Adding strike...");
+  rAdm("strikes");
+}
+
+async function removeStrike(id) {
+  if (!confirm("Remove this strike?")) return;
+  await api("/strikes/" + id, "DELETE", { reason: "Removed by manager" }, "Removing...");
+  rAdm("strikes");
+}
+
+async function manualStrike() {
+  const uid = document.getElementById("strikeUser").value;
+  const reason = document.getElementById("strikeReason").value.trim();
+  if (!uid) { alert("Select a user first."); return; }
+  await api("/strikes", "POST", { uid, reason: reason || "Manual strike" }, "Adding strike...");
+  document.getElementById("strikeUser").value = "";
+  document.getElementById("strikeReason").value = "";
+  rAdm("strikes");
+}
+
+async function bulkStrike() {
+  const accs = await api("/accounts");
+  const today = new Date().toDateString();
+  const slackers = [];
+  for (const a of accs) {
+    const ud = a.userData || {};
+    const curDay = ud.roadmap?.day || 1;
+    if (curDay > 7) continue;
+    const rd = ROADMAP[curDay - 1];
+    if (!rd) continue;
+    const tasksDone = rd.tasks.filter(t => ud.roadmap?.tasks?.[t.id]).length;
+    if (tasksDone < rd.tasks.length) {
+      slackers.push({ uid: a.uid, reason: `Day ${curDay}: ${tasksDone}/${rd.tasks.length} tasks` });
+    }
+  }
+  if (!slackers.length) { alert("No one to strike!"); return; }
+  if (!confirm(`Add strikes to ${slackers.length} users who didn't complete today's tasks?`)) return;
+  await api("/strikes/bulk", "POST", { users: slackers, reason: "Missed daily tasks" }, "Adding strikes...");
+  rAdm("strikes");
+}
+
+// ══════════════════ SOUND EFFECTS ══════════════════
+const SOUNDS = {
+  correct: 'data:audio/wav;base64,UklGRl9vT19teleWF2ZWZtdCAQAAAAABAAEARKwAAIhYAQACABAAZGF0YU',
+  wrong: 'data:audio/wav;base64,UklGRl9vT19teleWF2ZWZtdCAQAAAAABAAEARKwAAIhYAQACABAAZGF0YU',
+  success: 'data:audio/wav;base64,UklGRl9vT19teleWF2ZWZtdCAQAAAAABAAEARKwAAIhYAQACABAAZGF0YU'
+};
+let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.value = 0.1;
+    if (type === 'correct') { osc.frequency.value = 800; osc.type = 'sine'; }
+    else if (type === 'wrong') { osc.frequency.value = 200; osc.type = 'square'; }
+    else if (type === 'success') { osc.frequency.value = 600; osc.type = 'sine'; }
+    osc.start();
+    setTimeout(() => { osc.frequency.value = type === 'success' ? 900 : osc.frequency.value; }, 100);
+    setTimeout(() => { gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3); }, 200);
+    setTimeout(() => { osc.stop(); ctx.close(); }, 400);
+  } catch(e) {}
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('soundEnabled', soundEnabled);
+  document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+}
+
+// ══════════════════ DARK/LIGHT MODE ══════════════════
+let darkMode = localStorage.getItem('darkMode') !== 'false';
+function toggleTheme() {
+  darkMode = !darkMode;
+  localStorage.setItem('darkMode', darkMode);
+  document.body.classList.toggle('light-mode', !darkMode);
+  document.getElementById('themeToggle').textContent = darkMode ? '🌙' : '☀️';
+}
+function initTheme() {
+  document.body.classList.toggle('light-mode', !darkMode);
+}
+
+// ══════════════════ KONFETTI ══════════════════
+function fireConfetti() {
+  const container = document.createElement('div');
+  container.className = 'confetti-container';
+  document.body.appendChild(container);
+  const colors = ['#E94560', '#4caf50', '#ff9800', '#5c9aff', '#9c27b0', '#ffeb3b'];
+  for (let i = 0; i < 100; i++) {
+    const conf = document.createElement('div');
+    conf.className = 'confetti';
+    conf.style.cssText = `
+      left: ${Math.random() * 100}%;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      width: ${5 + Math.random() * 10}px;
+      height: ${5 + Math.random() * 10}px;
+      border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
+      animation: confetti-fall ${2 + Math.random() * 2}s linear forwards;
+      animation-delay: ${Math.random() * 0.5}s;
+    `;
+    container.appendChild(conf);
+  }
+  setTimeout(() => container.remove(), 5000);
+}
+
+// ══════════════════ CSV EXPORT ══════════════════
+function exportCSV(data, filename) {
+  if (!data.length) { alert('No data to export'); return; }
+  const headers = Object.keys(data[0]);
+  const csv = [headers.join(','), ...data.map(row => headers.map(h => {
+    let val = row[h];
+    if (val === null || val === undefined) val = '';
+    if (typeof val === 'string' && (val.includes(',') || val.includes('"') || val.includes('\n'))) {
+      val = '"' + val.replace(/"/g, '""') + '"';
+    }
+    return val;
+  }).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+async function exportAllResults() {
+  const res = await allRes();
+  if (!res.length) { alert('No results to export'); return; }
+  const data = res.map(r => ({
+    Date: new Date(r.date).toLocaleString(),
+    Name: r.name || r.uid,
+    Quiz: r.qname,
+    Score: r.score,
+    Total: r.total,
+    Percent: r.pct + '%',
+    Passed: r.passed ? 'Yes' : 'No',
+    Time: r.time ? Math.floor(r.time/60) + 'm ' + (r.time%60) + 's' : ''
+  }));
+  exportCSV(data, 'sales-academy-results-' + new Date().toISOString().split('T')[0] + '.csv');
+}
+
+async function exportStrikes() {
+  const strikes = await api('/strikes?all=true');
+  if (!strikes.length) { alert('No strikes to export'); return; }
+  const data = strikes.map(s => ({
+    Date: new Date(s.date).toLocaleString(),
+    User: s.name || s.uid,
+    Reason: s.reason || 'Missed tasks',
+    Removed: s.removedAt ? new Date(s.removedAt).toLocaleString() : '',
+    RemoveReason: s.removedReason || ''
+  }));
+  exportCSV(data, 'sales-academy-strikes-' + new Date().toISOString().split('T')[0] + '.csv');
+}
+
+// ══════════════════ USER DETAIL MODAL ══════════════════
+function showUserDetail(uid) {
+  const accs = Object.entries(_cache.accounts);
+  const a = accs.find(([id]) => id === uid);
+  if (!a) return;
+  const ud = getUD(uid);
+  const name = a[1].displayName || uid;
+  
+  let h = `<div class="modal-overlay show" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>👤 ${name}</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">`;
+  
+  // Stats
+  const lp = getLevelProgress(ud.xp || 0);
+  const curDay = ud.roadmap?.day || 1;
+  h += `<div class="analytics-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+    <div class="stat-card"><div class="stat-val">${lp.level}</div><div class="stat-lbl">Level</div></div>
+    <div class="stat-card"><div class="stat-val">${ud.xp || 0}</div><div class="stat-lbl">XP</div></div>
+    <div class="stat-card"><div class="stat-val">${curDay > 7 ? '✓' : curDay}</div><div class="stat-lbl">Day</div></div>
+  </div>`;
+  
+  // Last active
+  const lastLogin = ud.lastLogin || 'Never';
+  const today = new Date().toDateString();
+  const isToday = lastLogin === today;
+  h += `<div class="detail-box"><h3>Activity</h3>
+    <div class="detail-row"><span class="dl">Last Active</span><span class="dv ${isToday ? 'dv-g' : ''}">${isToday ? 'Today' : lastLogin}</span></div>
+    <div class="detail-row"><span class="dl">Login Streak</span><span class="dv">${ud.streak || 0} days</span></div>
+    <div class="detail-row"><span class="dl">Achievements</span><span class="dv">${(ud.achievements || []).length}/${ACHIEVEMENTS.length}</span></div>
+  </div>`;
+  
+  // Quiz scores
+  h += `<div class="detail-box"><h3>Quiz Scores</h3>`;
+  for (const [qid, qd] of Object.entries(BANK)) {
+    const b = best(uid, qid);
+    const att = attCnt(uid, qid);
+    h += `<div class="detail-row"><span class="dl">${qd.icon} ${qd.name}</span><span class="dv ${b >= CFG.pass.quiz ? 'dv-g' : b ? 'dv-b' : ''}">${b !== null ? b + '%' : '—'} <small style="color:var(--text4)">(${att} att)</small></span></div>`;
+  }
+  const cb = best(uid, 'cert');
+  h += `<div class="detail-row"><span class="dl">🏆 Certification</span><span class="dv ${cb >= CFG.pass.cert ? 'dv-g' : cb ? 'dv-b' : ''}">${cb !== null ? cb + '%' : '—'}</span></div>`;
+  h += `</div>`;
+  
+  // Recent results
+  const results = (ud.results || []).slice(-10).reverse();
+  if (results.length) {
+    h += `<div class="detail-box"><h3>Recent Results</h3>`;
+    results.forEach(r => {
+      h += `<div class="detail-row"><span class="dl">${r.qname} · ${new Date(r.date).toLocaleDateString()}</span><span class="dv ${r.passed ? 'dv-g' : 'dv-b'}">${r.pct}%</span></div>`;
+    });
+    h += `</div>`;
+  }
+  
+  h += `</div></div></div>`;
+  
+  const div = document.createElement('div');
+  div.id = 'userModal';
+  div.innerHTML = h;
+  document.body.appendChild(div);
+}
+
+function closeModal() {
+  const modal = document.getElementById('userModal');
+  if (modal) modal.remove();
+}
+
+// ══════════════════ WEEKLY REPORT ══════════════════
+function getWeeklyReport(accs) {
+  const now = new Date();
+  const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  const report = { active: 0, certified: 0, totalQuizzes: 0, avgScore: 0, scores: [] };
+  
+  for (const a of accs) {
+    const ud = a.userData || {};
+    const lastLogin = ud.lastLogin ? new Date(ud.lastLogin) : null;
+    if (lastLogin && lastLogin >= weekAgo) report.active++;
+    if ((best(a.uid, 'cert') || 0) >= CFG.pass.cert) report.certified++;
+    
+    const results = (ud.results || []).filter(r => new Date(r.date) >= weekAgo);
+    report.totalQuizzes += results.length;
+    results.forEach(r => report.scores.push(r.pct));
+  }
+  
+  report.avgScore = report.scores.length ? Math.round(report.scores.reduce((a,b) => a+b, 0) / report.scores.length) : 0;
+  return report;
+}
+
+// ══════════════════ SPEED RUN MODE ══════════════════
+let speedRunMode = false;
+let speedRunStart = 0;
+
+function startSpeedRun() {
+  speedRunMode = true;
+  speedRunStart = Date.now();
+  // Start a quiz with all questions
+  curQid = 'speedrun';
+  let all = [];
+  Object.values(BANK).forEach(b => all.push(...b.questions));
+  curQuiz = mkQuiz(all, 10); // 10 random questions
+  curQ = 0;
+  ans = new Array(curQuiz.length).fill(-1);
+  qL = new Array(curQuiz.length).fill(false);
+  tLeft = 300; // 5 min max
+  showV('v-quiz');
+  startTmr();
+  renderQ();
+}
+
+// ══════════════════ FAVORITES ══════════════════
+function getFavorites() {
+  try { return JSON.parse(localStorage.getItem('favorites') || '[]'); } catch { return []; }
+}
+function toggleFavorite(questionText) {
+  let favs = getFavorites();
+  const idx = favs.indexOf(questionText);
+  if (idx >= 0) favs.splice(idx, 1);
+  else favs.push(questionText);
+  localStorage.setItem('favorites', JSON.stringify(favs));
+  return favs.includes(questionText);
+}
+function isFavorite(questionText) {
+  return getFavorites().includes(questionText);
+}
+
+// ══════════════════ INIT ══════════════════
+initTheme();
+// Check server connection on load
+checkConnection();
+// Periodic connection check every 30s
+setInterval(checkConnection, 30000);
+
+</script>
+</body>
+</html>
