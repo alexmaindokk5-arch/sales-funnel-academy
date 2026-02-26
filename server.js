@@ -23,52 +23,15 @@ try {
 
 async function initDB() {
   try {
-    await db.batch([
-      `CREATE TABLE IF NOT EXISTS accounts (
-        uid TEXT PRIMARY KEY,
-        password TEXT NOT NULL,
-        displayName TEXT NOT NULL,
-        created TEXT DEFAULT (datetime('now'))
-      )`,
-      `CREATE TABLE IF NOT EXISTS user_data (
-        uid TEXT PRIMARY KEY,
-        data TEXT NOT NULL DEFAULT '{}'
-      )`,
-      `CREATE TABLE IF NOT EXISTS results (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        uid TEXT NOT NULL,
-        qid TEXT NOT NULL,
-        qname TEXT,
-        score INTEGER,
-        total INTEGER,
-        pct INTEGER,
-        time INTEGER,
-        passed INTEGER,
-        date TEXT,
-        num INTEGER
-      )`,
-      `CREATE TABLE IF NOT EXISTS strikes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        uid TEXT NOT NULL,
-        reason TEXT,
-        date TEXT DEFAULT (datetime('now')),
-        removedAt TEXT,
-        removedReason TEXT
-      )`
-    ]);
+    // Use individual execute calls instead of batch for better Turso compatibility
+    await db.execute(`CREATE TABLE IF NOT EXISTS accounts (uid TEXT PRIMARY KEY, password TEXT NOT NULL, displayName TEXT NOT NULL, created TEXT)`);
+    await db.execute(`CREATE TABLE IF NOT EXISTS user_data (uid TEXT PRIMARY KEY, data TEXT NOT NULL DEFAULT '{}')`);
+    await db.execute(`CREATE TABLE IF NOT EXISTS results (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, qid TEXT NOT NULL, qname TEXT, score INTEGER, total INTEGER, pct INTEGER, time INTEGER, passed INTEGER, date TEXT, num INTEGER)`);
+    await db.execute(`CREATE TABLE IF NOT EXISTS strikes (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, reason TEXT, date TEXT, removedAt TEXT, removedReason TEXT)`);
     console.log("Database tables ready.");
   } catch (e) {
     console.error("Table creation error:", e.message);
-    try {
-      await db.execute(`CREATE TABLE IF NOT EXISTS accounts (uid TEXT PRIMARY KEY, password TEXT NOT NULL, displayName TEXT NOT NULL, created TEXT)`);
-      await db.execute(`CREATE TABLE IF NOT EXISTS user_data (uid TEXT PRIMARY KEY, data TEXT NOT NULL DEFAULT '{}')`);
-      await db.execute(`CREATE TABLE IF NOT EXISTS results (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, qid TEXT NOT NULL, qname TEXT, score INTEGER, total INTEGER, pct INTEGER, time INTEGER, passed INTEGER, date TEXT, num INTEGER)`);
-      await db.execute(`CREATE TABLE IF NOT EXISTS strikes (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, reason TEXT, date TEXT, removedAt TEXT, removedReason TEXT)`);
-      console.log("Database tables ready (fallback mode).");
-    } catch (e2) {
-      console.error("Fallback table creation also failed:", e2.message);
-      throw e2;
-    }
+    throw e;
   }
 }
 
@@ -285,23 +248,19 @@ app.post("/api/accounts", async (req, res) => {
 
 app.delete("/api/accounts/:uid", async (req, res) => {
   try {
-    await db.batch([
-      { sql: "DELETE FROM strikes WHERE uid = ?", args: [req.params.uid] },
-      { sql: "DELETE FROM results WHERE uid = ?", args: [req.params.uid] },
-      { sql: "DELETE FROM user_data WHERE uid = ?", args: [req.params.uid] },
-      { sql: "DELETE FROM accounts WHERE uid = ?", args: [req.params.uid] },
-    ]);
+    await db.execute({ sql: "DELETE FROM strikes WHERE uid = ?", args: [req.params.uid] });
+    await db.execute({ sql: "DELETE FROM results WHERE uid = ?", args: [req.params.uid] });
+    await db.execute({ sql: "DELETE FROM user_data WHERE uid = ?", args: [req.params.uid] });
+    await db.execute({ sql: "DELETE FROM accounts WHERE uid = ?", args: [req.params.uid] });
     res.json({ ok: true });
   } catch (e) { console.error("Delete account error:", e.message); res.json({ ok: false, error: "Failed to delete account." }); }
 });
 
 app.post("/api/accounts/:uid/reset", async (req, res) => {
   try {
-    await db.batch([
-      { sql: "DELETE FROM results WHERE uid = ?", args: [req.params.uid] },
-      { sql: "DELETE FROM strikes WHERE uid = ?", args: [req.params.uid] },
-      { sql: "UPDATE user_data SET data = '{}' WHERE uid = ?", args: [req.params.uid] },
-    ]);
+    await db.execute({ sql: "DELETE FROM results WHERE uid = ?", args: [req.params.uid] });
+    await db.execute({ sql: "DELETE FROM strikes WHERE uid = ?", args: [req.params.uid] });
+    await db.execute({ sql: "UPDATE user_data SET data = '{}' WHERE uid = ?", args: [req.params.uid] });
     res.json({ ok: true });
   } catch (e) { console.error("Reset error:", e.message); res.json({ ok: false, error: "Failed to reset progress." }); }
 });
